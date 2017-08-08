@@ -8,12 +8,12 @@ import (
 	"io/ioutil"
 )
 
-type Unmarshaller func(reader io.Reader, dest interface{}) error
+type UnmarshalFunc func(reader io.Reader, dest interface{}) error
 
 func GetUnmarshaller(
 	presenceChecker func([]byte) error,
 	validator func(interface{}) error,
-) Unmarshaller {
+) UnmarshalFunc {
 	return func(reader io.Reader, dest interface{}) error {
 		var data, readErr = ioutil.ReadAll(reader)
 		if readErr != nil {

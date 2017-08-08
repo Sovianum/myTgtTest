@@ -9,6 +9,11 @@ import (
 const (
 	MALE   = "M"
 	FEMALE = "F"
+
+	RegistrationRequiredId  = "\"id field required\""
+	RegistrationRequiredAge = "\"age field required\""
+	RegistrationRequiredSex = "\"sex field required\""
+	RegistrationInvalidSex  = "\"invalid sex: must be either M or F\""
 )
 
 type Registration struct {

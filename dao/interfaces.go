@@ -12,5 +12,5 @@ type UserDAO interface {
 
 type StatsDAO interface {
 	Save(s model.Stats) error
-	Get(date time.Time, action string, limit uint) // TODO check if time.Time is a correct type
+	Get(date time.Time, action string, limit uint) model.StatsSlice
 }

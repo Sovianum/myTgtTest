@@ -5,6 +5,10 @@ import (
 	"github.com/Sovianum/myTgtTest/model"
 )
 
+const (
+	UserAlreadyExists = "User already exists"
+)
+
 type MapUserDAO struct {
 	m map[uint]model.Registration
 }

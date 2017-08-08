@@ -1,28 +1,27 @@
-package handlers
+package decorators
 
 import (
 	"net/http"
+	"github.com/Sovianum/myTgtTest/common"
 )
 
-func ValidateMethod(methodName string, handler handlerType) handlerType {
+func ValidateMethod(methodName string, handler common.HandlerType) common.HandlerType {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != methodName {
 			w.WriteHeader(http.StatusMethodNotAllowed)
 			return
 		}
-
 		handler(w, r)
 	}
 }
 
-func ValidateNonEmptyBody(errMsg string, handler handlerType) handlerType {
+func ValidateNonEmptyBody(errMsg string, handler common.HandlerType) common.HandlerType {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Body == nil {
 			w.WriteHeader(http.StatusBadRequest)
 			w.Write([]byte(errMsg))
 			return
 		}
-
 		handler(w, r)
 	}
 }
