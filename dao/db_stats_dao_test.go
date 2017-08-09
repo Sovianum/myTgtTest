@@ -6,6 +6,7 @@ import (
 	"strings"
 	"testing"
 	"time"
+	"errors"
 )
 
 func TestDbStatsDAO_Save_Success(t *testing.T) {
@@ -21,7 +22,7 @@ func TestDbStatsDAO_Save_Success(t *testing.T) {
 
 	mock.
 		ExpectExec("INSERT INTO").
-		WithArgs(1, time.Time(s.Timestamp), 0).
+		WithArgs(1, time.Time(s.Timestamp), s.Action).
 		WillReturnResult(sqlmock.NewResult(1, 1))
 
 	var statsDAO = NewDBStatsDAO(db)
@@ -32,7 +33,29 @@ func TestDbStatsDAO_Save_Success(t *testing.T) {
 	}
 }
 
-// TODO think of fail cases
+func TestDbStatsDAO_Save_DBFail(t *testing.T) {
+	var db, mock, err = sqlmock.New()
+
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer db.Close()
+
+	var s = model.Stats{}
+	s.ReadJsonIn(strings.NewReader("{\"user\":1, \"action\":\"login\", \"ts\":\"2017-06-30T14:12:34\"}"))
+
+	mock.
+	ExpectExec("INSERT INTO").
+		WithArgs(1, time.Time(s.Timestamp), s.Action).
+		WillReturnError(errors.New("Failed to save"))
+
+	var statsDAO = NewDBStatsDAO(db)
+	var saveErr = statsDAO.Save(s)
+
+	if saveErr == nil {
+		t.Error("Had to crash")
+	}
+}
 
 func TestDbStatsDAO_GetItem_Success(t *testing.T) {
 	var db, mock, err = sqlmock.New()
@@ -43,12 +66,12 @@ func TestDbStatsDAO_GetItem_Success(t *testing.T) {
 	defer db.Close()
 
 	var rows = sqlmock.NewRows([]string{"id", "age", "sex", "cnt"}).
-		AddRow(1, 100, 0, 10).
-		AddRow(2, 200, 1, 7)
+		AddRow(1, 100, "M", 10).
+		AddRow(2, 200, "F", 7)
 
 	var before = time.Date(2005, 10, 17, 0, 0, 0, 0, time.UTC)
 	var after = before.Add(24 * time.Hour)
-	var action, _ = model.EncodeAction(model.Like)
+	var action = model.Like
 	var limit = 10
 
 	mock.ExpectQuery("SELECT").
@@ -67,6 +90,31 @@ func TestDbStatsDAO_GetItem_Success(t *testing.T) {
 	}
 }
 
+func TestDbStatsDAO_GetItem_DBFail(t *testing.T) {
+	var db, mock, err = sqlmock.New()
+
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer db.Close()
+
+	var before = time.Date(2005, 10, 17, 0, 0, 0, 0, time.UTC)
+	var after = before.Add(24 * time.Hour)
+	var action = model.Like
+	var limit = 10
+
+	mock.ExpectQuery("SELECT").
+		WithArgs(before, after, action, limit).
+		WillReturnError(errors.New("Failed to select"))
+
+	var statsDAO = NewDBStatsDAO(db).(*dbStatsDAO)
+	var _, itemErr = statsDAO.getItem(before, model.Like, limit)
+
+	if itemErr == nil {
+		t.Error("Had to crash")
+	}
+}
+
 func TestDbStatsDAO_GetItem_Empty(t *testing.T) {
 	var db, mock, err = sqlmock.New()
 
@@ -79,7 +127,7 @@ func TestDbStatsDAO_GetItem_Empty(t *testing.T) {
 
 	var before = time.Date(2005, 10, 17, 0, 0, 0, 0, time.UTC)
 	var after = before.Add(24 * time.Hour)
-	var action, _ = model.EncodeAction(model.Like)
+	var action = model.Like
 	var limit = 10
 
 	mock.ExpectQuery("SELECT").
@@ -110,7 +158,7 @@ func TestDbStatsDAO_GetItem_BadAction(t *testing.T) {
 
 	var before = time.Date(2005, 10, 17, 0, 0, 0, 0, time.UTC)
 	var after = before.Add(24 * time.Hour)
-	var action, _ = model.EncodeAction(model.Like)
+	var action = model.Like
 	var limit = 10
 
 	mock.ExpectQuery("SELECT").
@@ -133,7 +181,7 @@ func TestDbStatsDAO_Get_IsSorted(t *testing.T) {
 	}
 	defer db.Close()
 
-	var action, _ = model.EncodeAction(model.Like)
+	var action = model.Like
 	var limit = 10
 
 	var testData = []struct {
@@ -145,15 +193,15 @@ func TestDbStatsDAO_Get_IsSorted(t *testing.T) {
 			before: time.Date(2003, 10, 17, 0, 0, 0, 0, time.UTC),
 			after:  time.Date(2003, 10, 18, 0, 0, 0, 0, time.UTC),
 			rows: sqlmock.NewRows([]string{"id", "age", "sex", "cnt"}).
-				AddRow(0, 10, 1, 100).
-				AddRow(1, 9, 0, 80),
+				AddRow(0, 10, "F", 100).
+				AddRow(1, 9, "M", 80),
 		},
 		{
 			before: time.Date(2005, 10, 17, 0, 0, 0, 0, time.UTC),
 			after:  time.Date(2005, 10, 18, 0, 0, 0, 0, time.UTC),
 			rows: sqlmock.NewRows([]string{"id", "age", "sex", "cnt"}).
-				AddRow(0, 100, 0, 10).
-				AddRow(1, 99, 1, 8),
+				AddRow(0, 100, "M", 10).
+				AddRow(1, 99, "F", 8),
 		},
 	}
 
@@ -199,5 +247,34 @@ func TestDbStatsDAO_Get_Empty(t *testing.T) {
 
 	if len(statsSlice.Items) != 0 {
 		t.Errorf("Incorrect row num: expected 0, got %v", len(statsSlice.Items))
+	}
+}
+
+func TestDbStatsDAO_Get_DBFail(t *testing.T) {
+	var db, mock, err = sqlmock.New()
+
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer db.Close()
+
+	var action = model.Like
+	var limit = 10
+
+	var before = time.Date(2003, 10, 17, 0, 0, 0, 0, time.UTC)
+	var after = before.Add(24 * time.Hour)
+
+	mock.ExpectQuery("SELECT").
+		WithArgs(before, after, action, limit).
+		WillReturnError(errors.New("Failed to get"))
+
+	var statsDAO = NewDBStatsDAO(db).(*dbStatsDAO)
+	var _, sliceErr = statsDAO.GetStatsSlice(
+		[]time.Time{before, after},
+		model.Like, limit,
+	)
+
+	if sliceErr == nil {
+		t.Error("Had to crash")
 	}
 }

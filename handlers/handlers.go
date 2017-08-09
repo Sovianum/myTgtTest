@@ -6,8 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"github.com/Sovianum/myTgtTest/dao"
-	"github.com/Sovianum/myTgtTest/handlers/common"
-	"github.com/Sovianum/myTgtTest/handlers/decorators"
 	"github.com/Sovianum/myTgtTest/model"
 	"net/http"
 	"net/url"
@@ -34,6 +32,8 @@ const (
 	limitParameter  = "limit"
 )
 
+type HandlerType func(http.ResponseWriter, *http.Request)
+
 type Env struct {
 	userDAO  dao.UserDAO
 	statsDAO dao.StatsDAO
@@ -46,7 +46,7 @@ func NewDBEnv(db *sql.DB) Env {
 	}
 }
 
-func (env *Env) GetRegisterHandler() common.HandlerType {
+func (env *Env) GetRegisterHandler() HandlerType {
 	var innerFunc = func(w http.ResponseWriter, r *http.Request) {
 		var registration = model.Registration{}
 		var err = registration.ReadJsonIn(r.Body)
@@ -65,16 +65,16 @@ func (env *Env) GetRegisterHandler() common.HandlerType {
 		}
 	}
 
-	return decorators.ValidateMethod(
+	return ValidateMethod(
 		http.MethodPost,
-		decorators.ValidateNonEmptyBody(
+		ValidateNonEmptyBody(
 			emptyBodyMsg,
 			innerFunc,
 		),
 	)
 }
 
-func (env *Env) GetStatsAddHandler() common.HandlerType {
+func (env *Env) GetStatsAddHandler() HandlerType {
 	var innerFunc = func(w http.ResponseWriter, r *http.Request) {
 		var stats = model.Stats{}
 		var err = stats.ReadJsonIn(r.Body)
@@ -85,7 +85,13 @@ func (env *Env) GetStatsAddHandler() common.HandlerType {
 			return
 		}
 
-		if !env.userDAO.Exists(stats.User) {
+		var exists, existsErr = env.userDAO.Exists(stats.User)
+		if existsErr != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(existsErr.Error()))
+		}
+
+		if !exists {
 			w.WriteHeader(http.StatusNotFound)
 			w.Write([]byte(userNotFound))
 			return
@@ -99,16 +105,16 @@ func (env *Env) GetStatsAddHandler() common.HandlerType {
 		}
 	}
 
-	return decorators.ValidateMethod(
+	return ValidateMethod(
 		http.MethodPost,
-		decorators.ValidateNonEmptyBody(
+		ValidateNonEmptyBody(
 			emptyBodyMsg,
 			innerFunc,
 		),
 	)
 }
 
-func (env *Env) GetStatsRequestHandler() common.HandlerType {
+func (env *Env) GetStatsRequestHandler() HandlerType {
 	var innerFunc = func(w http.ResponseWriter, r *http.Request) {
 		var query = r.URL.Query()
 		var checkErr = checkFieldsExistence(
@@ -148,7 +154,7 @@ func (env *Env) GetStatsRequestHandler() common.HandlerType {
 		w.Write(msg)
 	}
 
-	return decorators.ValidateMethod(
+	return ValidateMethod(
 		http.MethodGet,
 		innerFunc,
 	)

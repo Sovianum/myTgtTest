@@ -8,12 +8,15 @@ import (
 )
 
 const (
-	saveStats = `INSERT INTO Stats (userId, ts, action) VALUES ($1, $2, $3)`
+	saveStats = `INSERT INTO Stats (userId, ts, action) SELECT $1, $2, code FROM Action WHERE str = $3`
 	getStats  = `
-	SELECT c.id id, c.age age, c.sex sex, count(*) cnt FROM
-	  Client c JOIN Stats s ON c.id = s.userId
-	WHERE s.ts >= $1 AND s.ts < $2 AND s.action = $3
-	GROUP BY c.id
+	SELECT c.id id, c.age age, ss.str sex, count(*) cnt FROM
+	  Client c
+	  JOIN Sex ss ON ss.code = c.sex
+	  JOIN Stats st ON c.id = st.userId
+	  JOIN Action a ON a.code = st.action
+	WHERE st.ts >= $1 AND st.ts < $2 AND a.str = $3
+	GROUP BY c.id, ss.str
 	ORDER BY cnt DESC
 	LIMIT $4;
 	`
@@ -30,12 +33,7 @@ func NewDBStatsDAO(db *sql.DB) StatsDAO {
 }
 
 func (statsDao *dbStatsDAO) Save(s model.Stats) error {
-	var dbSlice, parseErr = s.DBSlice()
-	if parseErr != nil {
-		return parseErr
-	}
-
-	var _, err = statsDao.db.Exec(saveStats, dbSlice...)
+	var _, err = statsDao.db.Exec(saveStats, s.User, time.Time(s.Timestamp), s.Action)
 	return err
 }
 
@@ -72,12 +70,7 @@ func (statsDao *dbStatsDAO) getItem(date time.Time, action string, limit int) (m
 	var before = time.Date(date.Year(), date.Month(), date.Day(), 0, 0, 0, 0, time.UTC)
 	var after = before.Add(24 * time.Hour)
 
-	var actionCode, codeErr = model.EncodeAction(action)
-	if codeErr != nil {
-		return model.StatsItem{}, codeErr
-	}
-
-	var rows, dbErr = statsDao.db.Query(getStats, before, after, actionCode, limit)
+	var rows, dbErr = statsDao.db.Query(getStats, before, after, action, limit)
 	if dbErr != nil {
 		return model.StatsItem{}, dbErr
 	}

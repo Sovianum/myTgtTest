@@ -1,16 +1,36 @@
 
--- DROP TABLE IF EXISTS Client CASCADE ;
--- DROP TABLE IF EXISTS Stats CASCADE;
+DROP TABLE IF EXISTS Sex CASCADE ;
+DROP TABLE IF EXISTS Action CASCADE ;
+DROP TABLE IF EXISTS Client CASCADE ;
+DROP TABLE IF EXISTS Stats CASCADE;
+
+CREATE TABLE Sex (
+  code SERIAL PRIMARY KEY ,
+  str VARCHAR(1)
+);
+
+CREATE TABLE Action (
+  code SERIAL PRIMARY KEY ,
+  str VARCHAR(20)
+);
 
 CREATE TABLE Client (
   id INTEGER PRIMARY KEY ,
   age INTEGER,
-  sex SMALLINT
+  sex INT REFERENCES Sex(code)
 );
 
 CREATE TABLE Stats (
   id SERIAL,
   userId INTEGER REFERENCES Client(id),
   ts TIMESTAMP,
-  action SMALLINT
+  action INT REFERENCES Action(code)
 );
+
+INSERT INTO Sex (str) VALUES ('M');
+INSERT INTO Sex (str) VALUES ('F');
+
+INSERT INTO Action (str) VALUES ('login');
+INSERT INTO Action (str) VALUES ('like');
+INSERT INTO Action (str) VALUES ('comments');
+INSERT INTO Action (str) VALUES ('exit');

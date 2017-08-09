@@ -51,26 +51,3 @@ type Row struct {
 	Sex   string `json:"sex"`
 	Count uint   `json:"count"`
 }
-
-//func (r *Row) UnmarshalJSON(b []byte) error {
-//	type RowAlias Row
-//	var ra RowAlias
-//
-//	var parseErr = json.Unmarshal(b, ra)
-//	if parseErr != nil {
-//		return parseErr
-//	}
-//
-//	var intSex, _ = strconv.Atoi(ra.Sex)
-//	var stringSex, err = DecodeSex(intSex)
-//	if err != nil {
-//		return err
-//	}
-//
-//	r.Sex = stringSex
-//	r.Count = ra.Count
-//	r.Age = ra.Age
-//	r.Id = ra.Id
-//
-//	return nil
-//}

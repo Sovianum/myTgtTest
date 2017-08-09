@@ -6,7 +6,7 @@ import (
 )
 
 const (
-	saveUser  = `INSERT INTO Client (id, age, sex) VALUES ($1, $2, $3)`
+	saveUser  = `INSERT INTO Client (id, age, sex) SELECT $1, $2, code FROM Sex WHERE str = $3`
 	checkUser = `SELECT count(*) cnt FROM Client u WHERE u.id = $1`
 )
 
@@ -21,21 +21,16 @@ func NewDBUserDAO(db *sql.DB) UserDAO {
 }
 
 func (dao *dbUserDAO) Save(r model.Registration) error {
-	var args, sliceErr = r.DBSlice()
-	if sliceErr != nil {
-		return sliceErr
-	}
-
-	_, err := dao.db.Exec(saveUser, args...)
+	_, err := dao.db.Exec(saveUser, r.Id, r.Age, r.Sex)
 	return err
 }
 
-func (dao *dbUserDAO) Exists(id uint) bool {
+func (dao *dbUserDAO) Exists(id uint) (bool, error) {
 	var cnt int
 	var err = dao.db.QueryRow(checkUser, id).Scan(&cnt)
 	if err != nil {
-		panic(err)
+		return false, err
 	}
 
-	return cnt > 0
+	return cnt > 0, nil
 }

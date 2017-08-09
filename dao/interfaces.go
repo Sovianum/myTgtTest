@@ -7,7 +7,7 @@ import (
 
 type UserDAO interface {
 	Save(r model.Registration) error
-	Exists(id uint) bool
+	Exists(id uint) (bool, error)
 }
 
 type StatsDAO interface {

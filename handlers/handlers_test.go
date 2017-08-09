@@ -1,11 +1,9 @@
 package handlers
 
 import (
-	"github.com/Sovianum/myTgtTest/handlers/common"
 	"github.com/Sovianum/myTgtTest/handlers/mocks"
 	"github.com/Sovianum/myTgtTest/model"
 	"io"
-	"log"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -13,13 +11,11 @@ import (
 )
 
 const (
-	URL = "/url"
+	urlSample = "/urlSample"
 )
 
 func TestEnv_GetRegisterHandler_Method(t *testing.T) {
-	log.Println("Started http method testing")
-
-	var getRR, getErr = getRecorder(URL, http.MethodGet, new(Env).GetRegisterHandler(), nil)
+	var getRR, getErr = getRecorder(urlSample, http.MethodGet, new(Env).GetRegisterHandler(), nil)
 	if getErr != nil {
 		t.Fatal(getErr)
 	}
@@ -27,14 +23,10 @@ func TestEnv_GetRegisterHandler_Method(t *testing.T) {
 	if status := getRR.Code; status != http.StatusMethodNotAllowed {
 		t.Errorf("Method get not allowed for this request: got %v expected %v", status, http.StatusMethodNotAllowed)
 	}
-
-	log.Println("Http method tested successfully")
 }
 
 func TestEnv_GetRegisterHandler_EmptyBody(t *testing.T) {
-	log.Println("Started empty body testing")
-
-	var rr, err = getRecorder(URL, http.MethodPost, new(Env).GetRegisterHandler(), nil)
+	var rr, err = getRecorder(urlSample, http.MethodPost, new(Env).GetRegisterHandler(), nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -47,15 +39,11 @@ func TestEnv_GetRegisterHandler_EmptyBody(t *testing.T) {
 		t.Errorf("Message expected \"%v\" \n got \"%v\"", emptyBodyMsg, msg)
 	}
 
-	log.Println("Empty body tested successfully")
-
 }
 
 func TestEnv_GetRegisterHandler_JSONUnparsable(t *testing.T) {
-	log.Println("Started unparsable json testing")
-
 	var rr, err = getRecorder(
-		URL,
+		urlSample,
 		http.MethodPost,
 		new(Env).GetRegisterHandler(),
 		strings.NewReader("{it is badly formatted json}"),
@@ -67,13 +55,9 @@ func TestEnv_GetRegisterHandler_JSONUnparsable(t *testing.T) {
 	if status := rr.Code; status != http.StatusBadRequest {
 		t.Errorf("Responce code for badly formatted expected %v, got %v", http.StatusBadRequest, status)
 	}
-
-	log.Println("JSON parsing tested successfully")
 }
 
 func TestEnv_GetRegisterHandler_IncompleteData(t *testing.T) {
-	log.Println("Started incomplete json testing")
-
 	var testData = []struct {
 		inputMsg string
 		respMsg  string
@@ -85,7 +69,7 @@ func TestEnv_GetRegisterHandler_IncompleteData(t *testing.T) {
 
 	for _, item := range testData {
 		var rec, err = getRecorder(
-			URL,
+			urlSample,
 			http.MethodPost,
 			new(Env).GetRegisterHandler(),
 			strings.NewReader(item.inputMsg),
@@ -100,13 +84,9 @@ func TestEnv_GetRegisterHandler_IncompleteData(t *testing.T) {
 			t.Errorf("Wrong response expected \n \"%v\" \n, got \n \"%v\" on request \"%v\"", item.respMsg, msg, item.inputMsg)
 		}
 	}
-
-	log.Println("Incomplete json tested successfully")
 }
 
 func TestEnv_GetRegisterHandler_IncorrectData(t *testing.T) {
-	log.Println("Started incorrect json testing")
-
 	var testData = []struct {
 		inputMsg string
 	}{
@@ -120,7 +100,7 @@ func TestEnv_GetRegisterHandler_IncorrectData(t *testing.T) {
 
 	for _, item := range testData {
 		var rec, err = getRecorder(
-			URL,
+			urlSample,
 			http.MethodPost,
 			new(Env).GetRegisterHandler(),
 			strings.NewReader(item.inputMsg),
@@ -133,18 +113,15 @@ func TestEnv_GetRegisterHandler_IncorrectData(t *testing.T) {
 			t.Errorf("Expected status code %v, got %v on request %v", http.StatusBadRequest, status, item.inputMsg)
 		}
 	}
-
-	log.Println("Incorrect json tested successfully")
 }
 
 func TestEnv_GetRegisterHandler_Uniqueness(t *testing.T) {
-	log.Println("Started user uniqueness testing")
 	var inputMsg = "{\"id\":1, \"age\":1, \"sex\":\"M\"}"
 	var successEnv = &Env{userDAO: new(mocks.NotExistUserDAOMock)}
 	var failEnv = &Env{userDAO: new(mocks.ExistUserDAOMock)}
 
 	var successRec, successRecErr = getRecorder(
-		URL,
+		urlSample,
 		http.MethodPost,
 		successEnv.GetRegisterHandler(),
 		strings.NewReader(inputMsg),
@@ -157,7 +134,7 @@ func TestEnv_GetRegisterHandler_Uniqueness(t *testing.T) {
 	}
 
 	var failRec, failRecErr = getRecorder(
-		URL,
+		urlSample,
 		http.MethodPost,
 		failEnv.GetRegisterHandler(),
 		strings.NewReader(inputMsg),
@@ -168,14 +145,10 @@ func TestEnv_GetRegisterHandler_Uniqueness(t *testing.T) {
 	if status := failRec.Code; status != http.StatusConflict {
 		t.Errorf("Expected status code %v, got %v", http.StatusConflict, status)
 	}
-
-	log.Println("User uniqueness tested successfully")
 }
 
 func TestEnv_GetStatsAddHandler_Method(t *testing.T) {
-	log.Println("Started http method testing")
-
-	var getRR, getErr = getRecorder(URL, http.MethodGet, new(Env).GetStatsAddHandler(), nil)
+	var getRR, getErr = getRecorder(urlSample, http.MethodGet, new(Env).GetStatsAddHandler(), nil)
 	if getErr != nil {
 		t.Fatal(getErr)
 	}
@@ -183,14 +156,10 @@ func TestEnv_GetStatsAddHandler_Method(t *testing.T) {
 	if status := getRR.Code; status != http.StatusMethodNotAllowed {
 		t.Errorf("Method get not allowed for this request: got %v expected %v", status, http.StatusMethodNotAllowed)
 	}
-
-	log.Println("Http method tested successfully")
 }
 
 func TestEnv_GetStatsAddHandler_EmptyBody(t *testing.T) {
-	log.Println("Started empty body testing")
-
-	var rr, err = getRecorder(URL, http.MethodPost, new(Env).GetStatsAddHandler(), nil)
+	var rr, err = getRecorder(urlSample, http.MethodPost, new(Env).GetStatsAddHandler(), nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -202,16 +171,11 @@ func TestEnv_GetStatsAddHandler_EmptyBody(t *testing.T) {
 	if msg := string(rr.Body.Bytes()); msg != emptyBodyMsg {
 		t.Errorf("Message expected \"%v\" \n got \"%v\"", emptyBodyMsg, msg)
 	}
-
-	log.Println("Empty body tested successfully")
-
 }
 
 func TestEnv_GetStatsAddHandler_JSONUnparsable(t *testing.T) {
-	log.Println("Started unparsable json testing")
-
 	var rr, err = getRecorder(
-		URL,
+		urlSample,
 		http.MethodPost,
 		new(Env).GetStatsAddHandler(),
 		strings.NewReader("{it is badly formatted json}"),
@@ -223,13 +187,9 @@ func TestEnv_GetStatsAddHandler_JSONUnparsable(t *testing.T) {
 	if status := rr.Code; status != http.StatusBadRequest {
 		t.Errorf("Responce code for badly formatted expected %v, got %v", http.StatusBadRequest, status)
 	}
-
-	log.Println("JSON parsing tested successfully")
 }
 
 func TestEnv_GetStatsAddHandler_IncompleteData(t *testing.T) {
-	log.Println("Started incomplete json testing")
-
 	var testData = []struct {
 		inputMsg string
 		respMsg  string
@@ -241,7 +201,7 @@ func TestEnv_GetStatsAddHandler_IncompleteData(t *testing.T) {
 
 	for _, item := range testData {
 		var rec, err = getRecorder(
-			URL,
+			urlSample,
 			http.MethodPost,
 			new(Env).GetStatsAddHandler(),
 			strings.NewReader(item.inputMsg),
@@ -256,13 +216,9 @@ func TestEnv_GetStatsAddHandler_IncompleteData(t *testing.T) {
 			t.Errorf("Wrong response expected \n \"%v\" \n, got \n \"%v\" on request \"%v\"", item.respMsg, msg, item.inputMsg)
 		}
 	}
-
-	log.Println("Incomplete json tested successfully")
 }
 
 func TestEnv_GetStatsAddHandler_IncorrectData(t *testing.T) {
-	log.Println("Started incorrect json testing")
-
 	var testData = []struct {
 		inputMsg string
 	}{
@@ -273,7 +229,7 @@ func TestEnv_GetStatsAddHandler_IncorrectData(t *testing.T) {
 
 	for _, item := range testData {
 		var rec, err = getRecorder(
-			URL,
+			urlSample,
 			http.MethodPost,
 			new(Env).GetStatsAddHandler(),
 			strings.NewReader(item.inputMsg),
@@ -286,17 +242,14 @@ func TestEnv_GetStatsAddHandler_IncorrectData(t *testing.T) {
 			t.Errorf("Expected status code %v, got %v on request %v", http.StatusBadRequest, status, item.inputMsg)
 		}
 	}
-
-	log.Println("Incorrect json tested successfully")
 }
 
 func TestEnv_GetStatsAddHandler_UserNotExist(t *testing.T) {
-	log.Println("Started user does not exist testing")
 	var inputMsg = "{\"user\":100, \"action\":\"like\", \"ts\":\"2017-06-30T14:12:34\"}"
 	var failEnv = &Env{userDAO: new(mocks.NotExistUserDAOMock)}
 
 	var rec, err = getRecorder(
-		URL,
+		urlSample,
 		http.MethodPost,
 		failEnv.GetStatsAddHandler(),
 		strings.NewReader(inputMsg),
@@ -308,17 +261,14 @@ func TestEnv_GetStatsAddHandler_UserNotExist(t *testing.T) {
 	if status := rec.Code; status != http.StatusNotFound {
 		t.Errorf("Expected status code %v, got %v", http.StatusNotFound, status)
 	}
-
-	log.Println("User does not exist tested successfully")
 }
 
 func TestEnv_GetStatsAddHandler_Success(t *testing.T) {
-	log.Println("Started success testing")
 	var inputMsg = "{\"user\":100, \"action\":\"like\", \"ts\":\"2017-06-30T14:12:34\"}"
 	var failEnv = &Env{userDAO: new(mocks.ExistUserDAOMock), statsDAO: new(mocks.SuccessStatsDaoMock)}
 
 	var rec, err = getRecorder(
-		URL,
+		urlSample,
 		http.MethodPost,
 		failEnv.GetStatsAddHandler(),
 		strings.NewReader(inputMsg),
@@ -330,14 +280,10 @@ func TestEnv_GetStatsAddHandler_Success(t *testing.T) {
 	if status := rec.Code; status != http.StatusOK {
 		t.Errorf("Expected status code %v, got %v", http.StatusOK, status)
 	}
-
-	log.Println("Success tested successfully")
 }
 
 func TestEnv_GetStatsRequestHandler_Method(t *testing.T) {
-	log.Println("Started http method testing")
-
-	var rec, err = getRecorder(URL, http.MethodPost, new(Env).GetStatsRequestHandler(), nil)
+	var rec, err = getRecorder(urlSample, http.MethodPost, new(Env).GetStatsRequestHandler(), nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -345,17 +291,13 @@ func TestEnv_GetStatsRequestHandler_Method(t *testing.T) {
 	if status := rec.Code; status != http.StatusMethodNotAllowed {
 		t.Errorf("Method get not allowed for this request: got %v expected %v", status, http.StatusMethodNotAllowed)
 	}
-
-	log.Println("Http method tested successfully")
 }
 
 func TestEnv_GetStatsRequestHandler_IncompleteQueryString(t *testing.T) {
-	log.Println("Started incomplete query string testing")
-
 	var urlSlice = []string{
-		"/url?action=comments&limit=10",
-		"/url?date1=2017-06-20&date2=2017-06-30&limit=10",
-		"/url?date1=2017-06-20&date2=2017-06-30&action=comments",
+		"/urlSample?action=comments&limit=10",
+		"/urlSample?date1=2017-06-20&date2=2017-06-30&limit=10",
+		"/urlSample?date1=2017-06-20&date2=2017-06-30&action=comments",
 	}
 
 	for _, url := range urlSlice {
@@ -374,35 +316,31 @@ func TestEnv_GetStatsRequestHandler_IncompleteQueryString(t *testing.T) {
 			t.Errorf("Expected %v, got %v", http.StatusBadRequest, status)
 		}
 	}
-
-	log.Println("Incomplete query string tested successfully")
 }
 
 func TestEnv_GetStatsRequestHandler_BadQueryString(t *testing.T) {
-	log.Println("Started bad query string testing")
-
 	var testData = []struct {
 		url            string
 		nonPerfectness string
 	}{
 		{
-			url:            "/url?date1=2017-06D20&date2=2017-06-30&action=comments&limit=10",
+			url:            "/urlSample?date1=2017-06D20&date2=2017-06-30&action=comments&limit=10",
 			nonPerfectness: "Bad formatted date",
 		},
 		{
-			url:            "/url?date1=2017-06-20&date2=2017-06-30&action=coments&limit=10",
+			url:            "/urlSample?date1=2017-06-20&date2=2017-06-30&action=coments&limit=10",
 			nonPerfectness: "Unknown action",
 		},
 		{
-			url:            "/url?date1=2017-06-20&date2=2017-06-30&action=comments&action=comments&limit=10",
+			url:            "/urlSample?date1=2017-06-20&date2=2017-06-30&action=comments&action=comments&limit=10",
 			nonPerfectness: "Many actions",
 		},
 		{
-			url:            "/url?date1=2017-06-20&date2=2017-06-30&action=comments&limit=bad",
+			url:            "/urlSample?date1=2017-06-20&date2=2017-06-30&action=comments&limit=bad",
 			nonPerfectness: "Bad limit value",
 		},
 		{
-			url:            "/url?date1=2017-06-20&date2=2017-06-30&action=comments&limit=10&limit=100",
+			url:            "/urlSample?date1=2017-06-20&date2=2017-06-30&action=comments&limit=10&limit=100",
 			nonPerfectness: "Many limits",
 		},
 	}
@@ -423,19 +361,15 @@ func TestEnv_GetStatsRequestHandler_BadQueryString(t *testing.T) {
 			t.Errorf("Expected %v, got %v (%v)", http.StatusBadRequest, status, item.nonPerfectness)
 		}
 	}
-
-	log.Println("Bad query string tested successfully")
 }
 
 func TestEnv_GetStatsRequestHandler_Success(t *testing.T) {
-	log.Println("Started ok query string testing")
-
 	var testData = []struct {
 		url            string
 		nonPerfectness string
 	}{
 		{
-			url:            "/url?date1=2017-06-20&date2=2017-06-30&action=comments&limit=10",
+			url:            "/urlSample?date1=2017-06-20&date2=2017-06-30&action=comments&limit=10",
 			nonPerfectness: "None",
 		},
 	}
@@ -458,11 +392,9 @@ func TestEnv_GetStatsRequestHandler_Success(t *testing.T) {
 			t.Errorf("Expected %v, got %v (%v)", http.StatusOK, status, item.nonPerfectness)
 		}
 	}
-
-	log.Println("Ok query string tested successfully")
 }
 
-func getRecorder(url string, method string, handlerFunc common.HandlerType, body io.Reader) (*httptest.ResponseRecorder, error) {
+func getRecorder(url string, method string, handlerFunc HandlerType, body io.Reader) (*httptest.ResponseRecorder, error) {
 	var req, err = http.NewRequest(
 		method,
 		url,

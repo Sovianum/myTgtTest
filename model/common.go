@@ -6,6 +6,7 @@ import (
 	"io"
 	"io/ioutil"
 	"strings"
+	"fmt"
 )
 
 // This type represents a function, which reads data from reader to dest
@@ -14,7 +15,7 @@ type ReaderFunc func(reader io.Reader, dest interface{}) error
 // This function returns ReaderFunc wrapped with two testing functions:
 // 1. presenceChecker checks whether data read from reader contains all necessary fields
 // 2. validator checks whether resulting object is in valid state after reading in data from reader
-func GetReaderFunc(
+func getReaderFunc(
 	presenceChecker func([]byte) error,
 	validator func(interface{}) error,
 ) ReaderFunc {
@@ -43,6 +44,11 @@ func GetReaderFunc(
 // errMessages slice contains messages which are used if some field is not found.
 // Resulting error message consists of all corresponding errMessages, joined with ";\n"
 func checkPresence(jsonData []byte, fields []string, errMessages []string) error {
+	if len(fields) != len(errMessages) {
+		return errors.New(
+			fmt.Sprintf("Fields slice must have the same length (%v) as errMessages (%v)", len(fields), len(errMessages)),
+		)
+	}
 	var m = make(map[string]interface{})
 	var err = json.Unmarshal(jsonData, &m)
 

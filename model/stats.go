@@ -67,40 +67,9 @@ func (s *Stats) ReadJsonIn(reader io.Reader) error {
 		return nil
 	}
 
-	return GetReaderFunc(presenceChecker, validator)(reader, s)
-}
-
-func (s *Stats) DBSlice() ([]interface{}, error) {
-	var encodedAction, err = EncodeAction(s.Action)
-	if err != nil {
-		return []interface{}{}, err
-	}
-
-	return []interface{}{
-		s.User,
-		time.Time(s.Timestamp),
-		encodedAction,
-	}, nil
+	return getReaderFunc(presenceChecker, validator)(reader, s)
 }
 
 func IsValidAction(action string) bool {
 	return action == Login || action == Like || action == Comment || action == Exit
 }
-
-// Function encodes action string with int value to store it in database
-func EncodeAction(action string) (int, error) {
-	switch action {
-	case Login:
-		return 0, nil
-	case Like:
-		return 1, nil
-	case Comment:
-		return 2, nil
-	case Exit:
-		return 3, nil
-	default:
-		return -1, errors.New("Unknown action value")
-	}
-}
-
-// TODO add type descriptions
