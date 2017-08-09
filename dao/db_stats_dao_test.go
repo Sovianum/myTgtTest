@@ -17,7 +17,7 @@ func TestDbStatsDAO_Save_Success(t *testing.T) {
 	defer db.Close()
 
 	var s = model.Stats{}
-	s.UnmarshalJSON(strings.NewReader("{\"user\":1, \"action\":\"login\", \"ts\":\"2017-06-30T14:12:34\"}"))
+	s.ReadJsonIn(strings.NewReader("{\"user\":1, \"action\":\"login\", \"ts\":\"2017-06-30T14:12:34\"}"))
 
 	mock.
 		ExpectExec("INSERT INTO").

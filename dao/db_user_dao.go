@@ -6,8 +6,8 @@ import (
 )
 
 const (
-	saveUser  = `INSERT INTO "User" (id, age, sex) VALUES ($1, $2, $3)`
-	checkUser = `SELECT count(*) cnt FROM "User" u WHERE u.id = $1`
+	saveUser  = `INSERT INTO Client (id, age, sex) VALUES ($1, $2, $3)`
+	checkUser = `SELECT count(*) cnt FROM Client u WHERE u.id = $1`
 )
 
 type dbUserDAO struct {

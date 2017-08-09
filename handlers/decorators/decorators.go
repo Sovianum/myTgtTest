@@ -1,7 +1,7 @@
 package decorators
 
 import (
-	"github.com/Sovianum/myTgtTest/common"
+	"github.com/Sovianum/myTgtTest/handlers/common"
 	"net/http"
 )
 

@@ -2,6 +2,7 @@ package model
 
 import (
 	"errors"
+	"fmt"
 	"io"
 	"time"
 )
@@ -18,13 +19,36 @@ const (
 	StatsInvalidAction  = "\"invalid action: must be one of following values (login, like, comments, exit)\""
 )
 
+type Timestamp time.Time
+
+func (t *Timestamp) MarshalJSON() ([]byte, error) {
+	ts := time.Time(*t).Format("2006-01-02T15:04:05")
+	stamp := fmt.Sprint(ts)
+
+	return []byte(stamp), nil
+}
+
+func (t *Timestamp) UnmarshalJSON(b []byte) error {
+	var layout = "2006-01-02T15:04:05"
+
+	var inputS = string(b)
+	var ts, err = time.Parse(layout, inputS[1:len(inputS)-1]) // slicing removes quotes
+
+	if err != nil {
+		return err
+	}
+
+	*t = Timestamp(ts)
+	return nil
+}
+
 type Stats struct {
 	Timestamp Timestamp `json:"ts"`
 	User      uint      `json:"user"`
 	Action    string    `json:"action"`
 }
 
-func (s *Stats) UnmarshalJSON(reader io.Reader) error {
+func (s *Stats) ReadJsonIn(reader io.Reader) error {
 	var presenceChecker = func(data []byte) error {
 		return checkPresence(
 			data,
@@ -43,7 +67,7 @@ func (s *Stats) UnmarshalJSON(reader io.Reader) error {
 		return nil
 	}
 
-	return GetUnmarshaller(presenceChecker, validator)(reader, s)
+	return GetReaderFunc(presenceChecker, validator)(reader, s)
 }
 
 func (s *Stats) DBSlice() ([]interface{}, error) {

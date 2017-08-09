@@ -1,35 +1,37 @@
 package handlers
 
 import (
-	"github.com/Sovianum/myTgtTest/common"
+	"database/sql"
+	"encoding/json"
+	"errors"
+	"fmt"
 	"github.com/Sovianum/myTgtTest/dao"
-	"github.com/Sovianum/myTgtTest/decorators"
+	"github.com/Sovianum/myTgtTest/handlers/common"
+	"github.com/Sovianum/myTgtTest/handlers/decorators"
 	"github.com/Sovianum/myTgtTest/model"
 	"net/http"
-	"fmt"
 	"net/url"
-	"time"
-	"errors"
-	"strings"
 	"strconv"
-	"encoding/json"
+	"strings"
+	"time"
 )
 
 const (
-	emptyBodyMsg = "\"Empty body not allowed\""
+	userNotFound      = "\"User not found\""
+	emptyBodyMsg      = "\"Empty body not allowed\""
 	requiredActionMsg = "\"Required \"action\" query parameter\""
-	requiredLimitMsg = "\"Required \"limit\" query parameter\""
-	requiredDateMsg = "\"Required at least on date value\""
+	requiredLimitMsg  = "\"Required \"limit\" query parameter\""
+	requiredDateMsg   = "\"Required at least on date value\""
 
-	badLimitValueMsg = "\"Used incorrect limit value\""
+	badLimitValueMsg  = "\"Used incorrect limit value\""
 	badActionValueMsg = "\"Used incorrect action value\""
 
-	manyLimitValuesMsg = "\"Can not use multiple limit values\""
+	manyLimitValuesMsg  = "\"Can not use multiple limit values\""
 	manyActionValuesMsg = "\"Can not use multiple action values\""
 
-	datePrefix = "date"
+	datePrefix      = "date"
 	actionParameter = "action"
-	limitParameter = "limit"
+	limitParameter  = "limit"
 )
 
 type Env struct {
@@ -37,10 +39,17 @@ type Env struct {
 	statsDAO dao.StatsDAO
 }
 
+func NewDBEnv(db *sql.DB) Env {
+	return Env{
+		userDAO:  dao.NewDBUserDAO(db),
+		statsDAO: dao.NewDBStatsDAO(db),
+	}
+}
+
 func (env *Env) GetRegisterHandler() common.HandlerType {
 	var innerFunc = func(w http.ResponseWriter, r *http.Request) {
 		var registration = model.Registration{}
-		var err = registration.UnmarshalJSON(r.Body)
+		var err = registration.ReadJsonIn(r.Body)
 
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
@@ -68,7 +77,7 @@ func (env *Env) GetRegisterHandler() common.HandlerType {
 func (env *Env) GetStatsAddHandler() common.HandlerType {
 	var innerFunc = func(w http.ResponseWriter, r *http.Request) {
 		var stats = model.Stats{}
-		var err = stats.UnmarshalJSON(r.Body)
+		var err = stats.ReadJsonIn(r.Body)
 
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
@@ -78,6 +87,7 @@ func (env *Env) GetStatsAddHandler() common.HandlerType {
 
 		if !env.userDAO.Exists(stats.User) {
 			w.WriteHeader(http.StatusNotFound)
+			w.Write([]byte(userNotFound))
 			return
 		}
 

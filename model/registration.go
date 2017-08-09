@@ -22,7 +22,7 @@ type Registration struct {
 	Sex string `json:"sex"`
 }
 
-func (r *Registration) UnmarshalJSON(reader io.Reader) error {
+func (r *Registration) ReadJsonIn(reader io.Reader) error {
 	var presenceChecker = func(data []byte) error {
 		return checkPresence(
 			data,
@@ -36,7 +36,7 @@ func (r *Registration) UnmarshalJSON(reader io.Reader) error {
 		return validateRegistration(reg)
 	}
 
-	return GetUnmarshaller(presenceChecker, validator)(reader, r)
+	return GetReaderFunc(presenceChecker, validator)(reader, r)
 }
 
 func (r *Registration) DBSlice() ([]interface{}, error) {
@@ -60,17 +60,6 @@ func EncodeSex(sexString string) (int, error) {
 		return 1, nil
 	default:
 		return -1, errors.New("Strange sex")
-	}
-}
-
-func DecodeSex(sexNum int) (string, error) {
-	switch sexNum {
-	case 0:
-		return MALE, nil
-	case 1:
-		return FEMALE, nil
-	default:
-		return "", errors.New("Strange value")
 	}
 }
 

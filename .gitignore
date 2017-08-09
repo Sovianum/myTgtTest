@@ -18,4 +18,3 @@
 # IDE files
 .idea
 bin
-/resources/sql_test.sql

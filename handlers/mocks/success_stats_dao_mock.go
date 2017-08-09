@@ -17,7 +17,7 @@ func (*SuccessStatsDaoMock) Get([]time.Time, string, int) (model.StatsSlice, err
 		Date: model.Calendar(time.Now()),
 		Rows: []model.Row{row},
 	}
-	var slice = model.StatsSlice{Items:[]model.StatsItem{item}}
+	var slice = model.StatsSlice{Items: []model.StatsItem{item}}
 
 	return slice, nil
 }

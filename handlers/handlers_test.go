@@ -1,7 +1,7 @@
 package handlers
 
 import (
-	"github.com/Sovianum/myTgtTest/common"
+	"github.com/Sovianum/myTgtTest/handlers/common"
 	"github.com/Sovianum/myTgtTest/handlers/mocks"
 	"github.com/Sovianum/myTgtTest/model"
 	"io"
@@ -440,7 +440,7 @@ func TestEnv_GetStatsRequestHandler_Success(t *testing.T) {
 		},
 	}
 
-	var env = &Env{statsDAO:&mocks.SuccessStatsDaoMock{}}
+	var env = &Env{statsDAO: &mocks.SuccessStatsDaoMock{}}
 
 	for _, item := range testData {
 		var rec, err = getRecorder(
