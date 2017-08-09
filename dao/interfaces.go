@@ -12,5 +12,5 @@ type UserDAO interface {
 
 type StatsDAO interface {
 	Save(s model.Stats) error
-	Get(date time.Time, action string, limit uint) model.StatsSlice
+	Get(dates []time.Time, action string, limit int) (model.StatsSlice, error)
 }

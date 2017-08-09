@@ -1,12 +1,22 @@
 package model
 
+import "time"
+
 type StatsSlice struct {
-	Items []Item `json:"items"`
+	Items []StatsItem `json:"items"`
 }
 
-type Item struct {
+func NewStatsSlice() StatsSlice {
+	return StatsSlice{Items:make([]StatsItem, 0)}
+}
+
+type StatsItem struct {
 	Date Calendar `json:"date"`
 	Rows []Row    `json:"rows"`
+}
+
+func NewItem(date time.Time) StatsItem {
+	return StatsItem{Date:Calendar(date), Rows:make([]Row, 0)}
 }
 
 type Row struct {

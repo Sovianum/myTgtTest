@@ -334,6 +334,29 @@ func TestEnv_GetStatsAddHandler_Success(t *testing.T) {
 	log.Println("Success tested successfully")
 }
 
+func TestEnv_GetStatsRequestHandler_Method(t *testing.T) {
+	log.Println("Started http method testing")
+
+	var rec, err = getRecorder(URL, http.MethodPost, new(Env).GetStatsRequestHandler(), nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if status := rec.Code; status != http.StatusMethodNotAllowed {
+		t.Errorf("Method get not allowed for this request: got %v expected %v", status, http.StatusMethodNotAllowed)
+	}
+
+	log.Println("Http method tested successfully")
+}
+
+//func TestEnv_GetStatsRequestHandler_IncompleteQueryString(t *testing.T) {
+//	log.Println("Started incomplete query string testing")
+//
+//	var rec, err = getRecorder("/url?date1=2017-06-20", http.MethodPost, new(Env).GetStatsRequestHandler(), nil)
+//
+//	log.Println("Incomplete query string tested successfully")
+//}
+
 func getRecorder(url string, method string, handlerFunc common.HandlerType, body io.Reader) (*httptest.ResponseRecorder, error) {
 	var req, err = http.NewRequest(
 		method,

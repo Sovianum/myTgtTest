@@ -3,6 +3,7 @@ package model
 import (
 	"io"
 	"errors"
+	"time"
 )
 
 const (
@@ -44,4 +45,47 @@ func (s *Stats) UnmarshalJSON(reader io.Reader) error {
 	}
 
 	return GetUnmarshaller(presenceChecker, validator)(reader, s)
+}
+
+func (s *Stats) DBSlice() ([]interface{}, error) {
+	var encodedAction, err = EncodeAction(s.Action)
+	if err != nil {
+		return []interface{}{}, err
+	}
+
+	return []interface{}{
+		s.User,
+		time.Time(s.Timestamp),
+		encodedAction,
+	}, nil
+}
+
+func EncodeAction(action string) (int, error) {
+	switch action {
+	case Login:
+		return 0, nil
+	case Like:
+		return 1, nil
+	case Comment:
+		return 2, nil
+	case Exit:
+		return 3, nil
+	default:
+		return -1, errors.New("Unknown action value")
+	}
+}
+
+func DecodeAction(actionCode int) (string, error) {
+	switch actionCode {
+	case 0:
+		return Login, nil
+	case 1:
+		return Like, nil
+	case 2:
+		return Comment, nil
+	case 3:
+		return Exit, nil
+	default:
+		return "", errors.New("Unknown action")
+	}
 }

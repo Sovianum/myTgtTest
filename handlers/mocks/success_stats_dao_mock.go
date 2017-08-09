@@ -12,8 +12,8 @@ func (*SuccessStatsDaoMock) Save(stats model.Stats) error {
 }
 
 func (*SuccessStatsDaoMock) Get(time.Time, string, uint) model.StatsSlice {
-	var item = *new(model.Item)
+	var item = model.StatsItem{}
 	item.Rows = make([]model.Row, 0)
 
-	return model.StatsSlice{Items:[]model.Item{item}}
+	return model.StatsSlice{Items:[]model.StatsItem{item}}
 }

@@ -19,7 +19,7 @@ type Env struct {
 
 func (env *Env) GetRegisterHandler() common.HandlerType {
 	var innerFunc = func(w http.ResponseWriter, r *http.Request) {
-		var registration = *new(model.Registration)
+		var registration = model.Registration{}
 		var err = registration.UnmarshalJSON(r.Body)
 
 		if err != nil {
@@ -47,7 +47,7 @@ func (env *Env) GetRegisterHandler() common.HandlerType {
 
 func (env *Env) GetStatsAddHandler() common.HandlerType {
 	var innerFunc = func(w http.ResponseWriter, r *http.Request) {
-		var stats = *new(model.Stats)
+		var stats = model.Stats{}
 		var err = stats.UnmarshalJSON(r.Body)
 
 		if err != nil {
@@ -75,5 +75,14 @@ func (env *Env) GetStatsAddHandler() common.HandlerType {
 			emptyBodyMsg,
 			innerFunc,
 		),
+	)
+}
+
+func (env *Env) GetStatsRequestHandler() common.HandlerType {
+	var innerFunc = func(w http.ResponseWriter, r *http.Request) {}
+
+	return decorators.ValidateMethod(
+		http.MethodGet,
+		innerFunc,
 	)
 }
