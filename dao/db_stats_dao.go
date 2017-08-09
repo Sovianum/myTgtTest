@@ -3,8 +3,8 @@ package dao
 import (
 	"database/sql"
 	"github.com/Sovianum/myTgtTest/model"
-	"time"
 	"sort"
+	"time"
 )
 
 const (

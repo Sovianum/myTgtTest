@@ -52,16 +52,6 @@ func (r *Registration) DBSlice() ([]interface{}, error) {
 	}, nil
 }
 
-//func FromDBSlice(id uint, age uint, sexCode int) (Registration, error) {
-//	var sex, err = DecodeSex(sexCode)
-//	if err != nil {
-//		return Registration{}, err
-//	}
-//
-//	return Registration{Id:id, Age:age, Sex:sex}, nil
-//}
-
-
 func EncodeSex(sexString string) (int, error) {
 	switch sexString {
 	case MALE:
@@ -83,7 +73,6 @@ func DecodeSex(sexNum int) (string, error) {
 		return "", errors.New("Strange value")
 	}
 }
-
 
 func validateRegistration(r *Registration) error {
 	var msgList = make([]string, 0)

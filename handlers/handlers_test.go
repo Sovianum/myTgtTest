@@ -1,15 +1,15 @@
 package handlers
 
 import (
+	"github.com/Sovianum/myTgtTest/common"
 	"github.com/Sovianum/myTgtTest/handlers/mocks"
 	"github.com/Sovianum/myTgtTest/model"
+	"io"
 	"log"
 	"net/http"
 	"net/http/httptest"
-	"testing"
-	"io"
 	"strings"
-	"github.com/Sovianum/myTgtTest/common"
+	"testing"
 )
 
 const (
@@ -315,7 +315,7 @@ func TestEnv_GetStatsAddHandler_UserNotExist(t *testing.T) {
 func TestEnv_GetStatsAddHandler_Success(t *testing.T) {
 	log.Println("Started success testing")
 	var inputMsg = "{\"user\":100, \"action\":\"like\", \"ts\":\"2017-06-30T14:12:34\"}"
-	var failEnv = &Env{userDAO: new(mocks.ExistUserDAOMock), statsDAO:new(mocks.SuccessStatsDaoMock)}
+	var failEnv = &Env{userDAO: new(mocks.ExistUserDAOMock), statsDAO: new(mocks.SuccessStatsDaoMock)}
 
 	var rec, err = getRecorder(
 		URL,
@@ -349,13 +349,118 @@ func TestEnv_GetStatsRequestHandler_Method(t *testing.T) {
 	log.Println("Http method tested successfully")
 }
 
-//func TestEnv_GetStatsRequestHandler_IncompleteQueryString(t *testing.T) {
-//	log.Println("Started incomplete query string testing")
-//
-//	var rec, err = getRecorder("/url?date1=2017-06-20", http.MethodPost, new(Env).GetStatsRequestHandler(), nil)
-//
-//	log.Println("Incomplete query string tested successfully")
-//}
+func TestEnv_GetStatsRequestHandler_IncompleteQueryString(t *testing.T) {
+	log.Println("Started incomplete query string testing")
+
+	var urlSlice = []string{
+		"/url?action=comments&limit=10",
+		"/url?date1=2017-06-20&date2=2017-06-30&limit=10",
+		"/url?date1=2017-06-20&date2=2017-06-30&action=comments",
+	}
+
+	for _, url := range urlSlice {
+		var rec, err = getRecorder(
+			url,
+			http.MethodGet,
+			new(Env).GetStatsRequestHandler(),
+			nil,
+		)
+
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if status := rec.Code; status != http.StatusBadRequest {
+			t.Errorf("Expected %v, got %v", http.StatusBadRequest, status)
+		}
+	}
+
+	log.Println("Incomplete query string tested successfully")
+}
+
+func TestEnv_GetStatsRequestHandler_BadQueryString(t *testing.T) {
+	log.Println("Started bad query string testing")
+
+	var testData = []struct {
+		url            string
+		nonPerfectness string
+	}{
+		{
+			url:            "/url?date1=2017-06D20&date2=2017-06-30&action=comments&limit=10",
+			nonPerfectness: "Bad formatted date",
+		},
+		{
+			url:            "/url?date1=2017-06-20&date2=2017-06-30&action=coments&limit=10",
+			nonPerfectness: "Unknown action",
+		},
+		{
+			url:            "/url?date1=2017-06-20&date2=2017-06-30&action=comments&action=comments&limit=10",
+			nonPerfectness: "Many actions",
+		},
+		{
+			url:            "/url?date1=2017-06-20&date2=2017-06-30&action=comments&limit=bad",
+			nonPerfectness: "Bad limit value",
+		},
+		{
+			url:            "/url?date1=2017-06-20&date2=2017-06-30&action=comments&limit=10&limit=100",
+			nonPerfectness: "Many limits",
+		},
+	}
+
+	for _, item := range testData {
+		var rec, err = getRecorder(
+			item.url,
+			http.MethodGet,
+			new(Env).GetStatsRequestHandler(),
+			nil,
+		)
+
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if status := rec.Code; status != http.StatusBadRequest {
+			t.Errorf("Expected %v, got %v (%v)", http.StatusBadRequest, status, item.nonPerfectness)
+		}
+	}
+
+	log.Println("Bad query string tested successfully")
+}
+
+func TestEnv_GetStatsRequestHandler_Success(t *testing.T) {
+	log.Println("Started ok query string testing")
+
+	var testData = []struct {
+		url            string
+		nonPerfectness string
+	}{
+		{
+			url:            "/url?date1=2017-06-20&date2=2017-06-30&action=comments&limit=10",
+			nonPerfectness: "None",
+		},
+	}
+
+	var env = &Env{statsDAO:&mocks.SuccessStatsDaoMock{}}
+
+	for _, item := range testData {
+		var rec, err = getRecorder(
+			item.url,
+			http.MethodGet,
+			env.GetStatsRequestHandler(),
+			nil,
+		)
+
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if status := rec.Code; status != http.StatusOK {
+			t.Errorf("Expected %v, got %v (%v)", http.StatusOK, status, item.nonPerfectness)
+		}
+	}
+
+	log.Println("Ok query string tested successfully")
+}
 
 func getRecorder(url string, method string, handlerFunc common.HandlerType, body io.Reader) (*httptest.ResponseRecorder, error) {
 	var req, err = http.NewRequest(

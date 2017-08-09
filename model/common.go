@@ -3,9 +3,9 @@ package model
 import (
 	"encoding/json"
 	"errors"
-	"strings"
 	"io"
 	"io/ioutil"
+	"strings"
 )
 
 type UnmarshalFunc func(reader io.Reader, dest interface{}) error

@@ -1,8 +1,8 @@
 package model
 
 import (
-	"io"
 	"errors"
+	"io"
 	"time"
 )
 
@@ -15,7 +15,7 @@ const (
 	StatsRequiredTs     = "\"st field required\""
 	StatsRequiredUser   = "\"user field required\""
 	StatsRequiredAction = "\"action field required\""
-	StatsInvalidAction = "\"invalid action: must be one of following values (login, like, comments, exit)\""
+	StatsInvalidAction  = "\"invalid action: must be one of following values (login, like, comments, exit)\""
 )
 
 type Stats struct {
@@ -36,8 +36,7 @@ func (s *Stats) UnmarshalJSON(reader io.Reader) error {
 	var validator = func(val interface{}) error {
 		var stats = val.(*Stats)
 
-		var condition = stats.Action == Login || stats.Action == Like || stats.Action == Comment || stats.Action == Exit
-		if !condition {
+		if !IsValidAction(stats.Action) {
 			return errors.New(StatsInvalidAction)
 		}
 
@@ -58,6 +57,10 @@ func (s *Stats) DBSlice() ([]interface{}, error) {
 		time.Time(s.Timestamp),
 		encodedAction,
 	}, nil
+}
+
+func IsValidAction(action string) bool {
+	return action == Login || action == Like || action == Comment || action == Exit
 }
 
 func EncodeAction(action string) (int, error) {

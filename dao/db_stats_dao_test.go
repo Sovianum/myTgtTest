@@ -1,10 +1,10 @@
 package dao
 
 import (
-	"testing"
-	"gopkg.in/DATA-DOG/go-sqlmock.v1"
 	"github.com/Sovianum/myTgtTest/model"
+	"gopkg.in/DATA-DOG/go-sqlmock.v1"
 	"strings"
+	"testing"
 	"time"
 )
 
@@ -20,7 +20,7 @@ func TestDbStatsDAO_Save_Success(t *testing.T) {
 	s.UnmarshalJSON(strings.NewReader("{\"user\":1, \"action\":\"login\", \"ts\":\"2017-06-30T14:12:34\"}"))
 
 	mock.
-	ExpectExec("INSERT INTO").
+		ExpectExec("INSERT INTO").
 		WithArgs(1, time.Time(s.Timestamp), 0).
 		WillReturnResult(sqlmock.NewResult(1, 1))
 
@@ -136,22 +136,22 @@ func TestDbStatsDAO_Get_IsSorted(t *testing.T) {
 	var action, _ = model.EncodeAction(model.Like)
 	var limit = 10
 
-	var testData = []struct{
+	var testData = []struct {
 		before time.Time
-		after time.Time
-		rows *sqlmock.Rows
+		after  time.Time
+		rows   *sqlmock.Rows
 	}{
 		{
-			before:time.Date(2003, 10, 17, 0, 0, 0, 0, time.UTC),
-			after:time.Date(2003, 10, 18, 0, 0, 0, 0, time.UTC),
-			rows:sqlmock.NewRows([]string{"id", "age", "sex", "cnt"}).
+			before: time.Date(2003, 10, 17, 0, 0, 0, 0, time.UTC),
+			after:  time.Date(2003, 10, 18, 0, 0, 0, 0, time.UTC),
+			rows: sqlmock.NewRows([]string{"id", "age", "sex", "cnt"}).
 				AddRow(0, 10, 1, 100).
 				AddRow(1, 9, 0, 80),
 		},
 		{
-			before:time.Date(2005, 10, 17, 0, 0, 0, 0, time.UTC),
-			after:time.Date(2005, 10, 18, 0, 0, 0, 0, time.UTC),
-			rows:sqlmock.NewRows([]string{"id", "age", "sex", "cnt"}).
+			before: time.Date(2005, 10, 17, 0, 0, 0, 0, time.UTC),
+			after:  time.Date(2005, 10, 18, 0, 0, 0, 0, time.UTC),
+			rows: sqlmock.NewRows([]string{"id", "age", "sex", "cnt"}).
 				AddRow(0, 100, 0, 10).
 				AddRow(1, 99, 1, 8),
 		},

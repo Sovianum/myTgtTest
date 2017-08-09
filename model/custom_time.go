@@ -8,7 +8,7 @@ import (
 type Timestamp time.Time
 
 func (t *Timestamp) MarshalJSON() ([]byte, error) {
-	ts := time.Time(*t).Unix()
+	ts := time.Time(*t).Format("2006-01-02T15:04:05")
 	stamp := fmt.Sprint(ts)
 
 	return []byte(stamp), nil
@@ -18,7 +18,7 @@ func (t *Timestamp) UnmarshalJSON(b []byte) error {
 	var layout = "2006-01-02T15:04:05"
 
 	var inputS = string(b)
-	var ts, err = time.Parse(layout, inputS[1:len(inputS)-1]) // slicing removes quotes
+	var ts, err = time.Parse(layout, inputS[1:len(inputS)-1]) // slicing removes quotes TODO check if correct
 
 	if err != nil {
 		return err
@@ -28,13 +28,11 @@ func (t *Timestamp) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
-
 type Calendar time.Time
 
-func (c *Calendar) MarshalJSON() ([]byte, error) {
-	// TODO test if implemented correctly
-	ts := time.Time(*c).Unix()
-	stamp := fmt.Sprint(ts)
+func (c Calendar) MarshalJSON() ([]byte, error) {
+	ts := time.Time(c).Format("2006-01-02")
+	stamp := fmt.Sprintf("\"%s\"", ts)
 
 	return []byte(stamp), nil
 }
@@ -52,4 +50,3 @@ func (c *Calendar) UnmarshalJSON(b []byte) error {
 	*c = Calendar(ts)
 	return nil
 }
-

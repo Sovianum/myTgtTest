@@ -1,8 +1,8 @@
 package decorators
 
 import (
-	"net/http"
 	"github.com/Sovianum/myTgtTest/common"
+	"net/http"
 )
 
 func ValidateMethod(methodName string, handler common.HandlerType) common.HandlerType {

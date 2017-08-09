@@ -7,7 +7,7 @@ type StatsSlice struct {
 }
 
 func NewStatsSlice() StatsSlice {
-	return StatsSlice{Items:make([]StatsItem, 0)}
+	return StatsSlice{Items: make([]StatsItem, 0)}
 }
 
 type StatsItem struct {
@@ -16,7 +16,7 @@ type StatsItem struct {
 }
 
 func NewItem(date time.Time) StatsItem {
-	return StatsItem{Date:Calendar(date), Rows:make([]Row, 0)}
+	return StatsItem{Date: Calendar(date), Rows: make([]Row, 0)}
 }
 
 type Row struct {
