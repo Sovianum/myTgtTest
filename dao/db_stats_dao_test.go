@@ -164,7 +164,7 @@ func TestDbStatsDAO_Get_IsSorted(t *testing.T) {
 	}
 
 	var statsDAO = NewDBStatsDAO(db).(*dbStatsDAO)
-	var statsSlice, sliceErr = statsDAO.Get(
+	var statsSlice, sliceErr = statsDAO.GetStatsSlice(
 		[]time.Time{testData[1].before, testData[0].before},
 		model.Like, limit,
 	)
@@ -188,7 +188,7 @@ func TestDbStatsDAO_Get_Empty(t *testing.T) {
 
 	var limit = 10
 	var statsDAO = NewDBStatsDAO(db).(*dbStatsDAO)
-	var statsSlice, sliceErr = statsDAO.Get(
+	var statsSlice, sliceErr = statsDAO.GetStatsSlice(
 		[]time.Time{},
 		model.Like, limit,
 	)

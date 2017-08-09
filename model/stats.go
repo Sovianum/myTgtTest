@@ -87,6 +87,7 @@ func IsValidAction(action string) bool {
 	return action == Login || action == Like || action == Comment || action == Exit
 }
 
+// Function encodes action string with int value to store it in database
 func EncodeAction(action string) (int, error) {
 	switch action {
 	case Login:
@@ -102,17 +103,4 @@ func EncodeAction(action string) (int, error) {
 	}
 }
 
-func DecodeAction(actionCode int) (string, error) {
-	switch actionCode {
-	case 0:
-		return Login, nil
-	case 1:
-		return Like, nil
-	case 2:
-		return Comment, nil
-	case 3:
-		return Exit, nil
-	default:
-		return "", errors.New("Unknown action")
-	}
-}
+// TODO add type descriptions

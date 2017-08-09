@@ -8,8 +8,12 @@ import (
 	"strings"
 )
 
+// This type represents a function, which reads data from reader to dest
 type ReaderFunc func(reader io.Reader, dest interface{}) error
 
+// This function returns ReaderFunc wrapped with two testing functions:
+// 1. presenceChecker checks whether data read from reader contains all necessary fields
+// 2. validator checks whether resulting object is in valid state after reading in data from reader
 func GetReaderFunc(
 	presenceChecker func([]byte) error,
 	validator func(interface{}) error,
@@ -35,9 +39,12 @@ func GetReaderFunc(
 	}
 }
 
-func checkPresence(data []byte, fields []string, errMessages []string) error {
+// Function checks whether jsonData contains all fields from fields slice.
+// errMessages slice contains messages which are used if some field is not found.
+// Resulting error message consists of all corresponding errMessages, joined with ";\n"
+func checkPresence(jsonData []byte, fields []string, errMessages []string) error {
 	var m = make(map[string]interface{})
-	var err = json.Unmarshal(data, &m)
+	var err = json.Unmarshal(jsonData, &m)
 
 	if err != nil {
 		return err

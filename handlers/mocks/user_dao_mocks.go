@@ -14,3 +14,13 @@ func (*ExistUserDAOMock) Save(model.Registration) error {
 func (*ExistUserDAOMock) Exists(uint) bool {
 	return true
 }
+
+type NotExistUserDAOMock struct{}
+
+func (*NotExistUserDAOMock) Save(model.Registration) error {
+	return nil
+}
+
+func (*NotExistUserDAOMock) Exists(uint) bool {
+	return false
+}

@@ -52,6 +52,7 @@ func (r *Registration) DBSlice() ([]interface{}, error) {
 	}, nil
 }
 
+// Function encodes sex string with int value to store it in database
 func EncodeSex(sexString string) (int, error) {
 	switch sexString {
 	case MALE:
@@ -60,6 +61,18 @@ func EncodeSex(sexString string) (int, error) {
 		return 1, nil
 	default:
 		return -1, errors.New("Strange sex")
+	}
+}
+
+// Function decodes sex stored in database to its original value
+func DecodeSex(sexCode int) (string, error) {
+	switch sexCode {
+	case 0:
+		return MALE, nil
+	case 1:
+		return FEMALE, nil
+	default:
+		return "", errors.New("Strange sex")
 	}
 }
 

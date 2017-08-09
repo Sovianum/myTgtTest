@@ -39,7 +39,7 @@ func (statsDao *dbStatsDAO) Save(s model.Stats) error {
 	return err
 }
 
-func (statsDao *dbStatsDAO) Get(dates []time.Time, action string, limit int) (model.StatsSlice, error) {
+func (statsDao *dbStatsDAO) GetStatsSlice(dates []time.Time, action string, limit int) (model.StatsSlice, error) {
 	if len(dates) == 0 {
 		return model.NewStatsSlice(), nil
 	}

@@ -137,7 +137,7 @@ func (env *Env) GetStatsRequestHandler() common.HandlerType {
 			return
 		}
 
-		var statsSlice, err = env.statsDAO.Get(dateSlice, action, limit)
+		var statsSlice, err = env.statsDAO.GetStatsSlice(dateSlice, action, limit)
 		if parseErr != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(err.Error()))
@@ -154,6 +154,8 @@ func (env *Env) GetStatsRequestHandler() common.HandlerType {
 	)
 }
 
+// Function returns error if some of names in nameSlice not present in query.
+// Resulting error message consists of corresponding messages from errMsgSlice joined with ";\n"
 func checkFieldsExistence(query url.Values, nameSlice []string, errMsgSlice []string) error {
 	var msgSlice = make([]string, 0)
 
@@ -206,6 +208,7 @@ func getActionAndLimit(query url.Values) (string, int, error) {
 	return actions[0], limit, nil
 }
 
+// Function parses output of gatDateSlice function. Empty slice is considered to be an error
 func getParsedDateSlice(strDateSlice []string) ([]time.Time, error) {
 	if len(strDateSlice) == 0 {
 		return []time.Time{}, errors.New(requiredDateMsg)
@@ -227,6 +230,9 @@ func getParsedDateSlice(strDateSlice []string) ([]time.Time, error) {
 	return result, err
 }
 
+// Function returns slice of string values in query, trying sequentially names of type
+// date%d, starting from date1. If name is not found, search ends. Empty slice is
+// not considered to be an error
 func getDateSlice(query url.Values) []string {
 	var result = make([]string, 0)
 	var dateNameGen = getNameGen(datePrefix, 1)
@@ -243,6 +249,8 @@ func getDateSlice(query url.Values) []string {
 	return result
 }
 
+// Function returns another function, which generates sequential names
+// For example: prefix=date, startNum=1 => date1, date2, date3...
 func getNameGen(prefix string, startNum int) func() string {
 	var cnt = startNum - 1
 	return func() string {
