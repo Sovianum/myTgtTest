@@ -1,9 +1,9 @@
 package handlers
 
 import (
-	"testing"
 	"net/http"
 	"strings"
+	"testing"
 )
 
 func TestValidateMethod_Success(t *testing.T) {

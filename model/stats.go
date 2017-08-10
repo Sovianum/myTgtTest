@@ -19,16 +19,16 @@ const (
 	StatsInvalidAction  = "\"invalid action: must be one of following values (login, like, comments, exit)\""
 )
 
-type Timestamp time.Time
+type QuotedTime time.Time
 
-func (t *Timestamp) MarshalJSON() ([]byte, error) {
+func (t *QuotedTime) MarshalJSON() ([]byte, error) {
 	ts := time.Time(*t).Format("2006-01-02T15:04:05")
-	stamp := fmt.Sprint(ts)
+	stamp := fmt.Sprintf("\"%v\"", ts)
 
 	return []byte(stamp), nil
 }
 
-func (t *Timestamp) UnmarshalJSON(b []byte) error {
+func (t *QuotedTime) UnmarshalJSON(b []byte) error {
 	var layout = "2006-01-02T15:04:05"
 
 	var inputS = string(b)
@@ -38,14 +38,14 @@ func (t *Timestamp) UnmarshalJSON(b []byte) error {
 		return err
 	}
 
-	*t = Timestamp(ts)
+	*t = QuotedTime(ts)
 	return nil
 }
 
 type Stats struct {
-	Timestamp Timestamp `json:"ts"`
-	User      uint      `json:"user"`
-	Action    string    `json:"action"`
+	Timestamp QuotedTime `json:"ts"`
+	User      uint       `json:"user"`
+	Action    string     `json:"action"`
 }
 
 func (s *Stats) ReadJsonIn(reader io.Reader) error {

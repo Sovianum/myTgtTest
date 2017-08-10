@@ -1,8 +1,8 @@
 package model
 
 import (
-	"testing"
 	"strings"
+	"testing"
 )
 
 func TestRegistration_ReadJsonIn_ParseError(t *testing.T) {
@@ -22,7 +22,7 @@ func TestRegistration_ReadJsonIn_IncompleteData(t *testing.T) {
 		t.Error("Had to crash")
 	}
 	if err.Error() != RegistrationRequiredId {
-		t.Error("Wrong error")
+		t.Errorf("Wrong error: expected %v, got %v", RegistrationRequiredId, err.Error())
 	}
 }
 
@@ -34,7 +34,7 @@ func TestRegistration_ReadJsonIn_InvalidRegistration(t *testing.T) {
 		t.Error("Had to crash")
 	}
 	if err.Error() != RegistrationInvalidSex {
-		t.Error("Wrong error")
+		t.Errorf("Wrong error: expected %v, got %v", RegistrationInvalidSex, err.Error())
 	}
 }
 
@@ -49,4 +49,3 @@ func TestRegistration_ReadJsonIn_Success(t *testing.T) {
 		t.Error("Not set correct values")
 	}
 }
-

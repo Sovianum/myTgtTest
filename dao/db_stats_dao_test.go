@@ -1,12 +1,12 @@
 package dao
 
 import (
+	"errors"
 	"github.com/Sovianum/myTgtTest/model"
 	"gopkg.in/DATA-DOG/go-sqlmock.v1"
 	"strings"
 	"testing"
 	"time"
-	"errors"
 )
 
 func TestDbStatsDAO_Save_Success(t *testing.T) {
@@ -45,7 +45,7 @@ func TestDbStatsDAO_Save_DBFail(t *testing.T) {
 	s.ReadJsonIn(strings.NewReader("{\"user\":1, \"action\":\"login\", \"ts\":\"2017-06-30T14:12:34\"}"))
 
 	mock.
-	ExpectExec("INSERT INTO").
+		ExpectExec("INSERT INTO").
 		WithArgs(1, time.Time(s.Timestamp), s.Action).
 		WillReturnError(errors.New("Failed to save"))
 
@@ -54,6 +54,9 @@ func TestDbStatsDAO_Save_DBFail(t *testing.T) {
 
 	if saveErr == nil {
 		t.Error("Had to crash")
+	}
+	if saveErr.Error() != "Failed to save" {
+		t.Errorf("Wrong error expected %v, got %v", "\"Failed to save\"", saveErr.Error())
 	}
 }
 
@@ -113,6 +116,10 @@ func TestDbStatsDAO_GetItem_DBFail(t *testing.T) {
 	if itemErr == nil {
 		t.Error("Had to crash")
 	}
+
+	if itemErr.Error() != "Failed to select" {
+		t.Errorf("Wrong error expected %v got %v", "\"Failed to select\"", itemErr.Error())
+	}
 }
 
 func TestDbStatsDAO_GetItem_Empty(t *testing.T) {
@@ -171,6 +178,10 @@ func TestDbStatsDAO_GetItem_BadAction(t *testing.T) {
 	if itemErr == nil {
 		t.Error("Had to crash on strange action")
 	}
+
+	if itemErr.Error() != model.StatsInvalidAction {
+		t.Errorf("Wrong error expected %v, got %v", model.StatsInvalidAction, itemErr.Error())
+	}
 }
 
 func TestDbStatsDAO_Get_IsSorted(t *testing.T) {
@@ -213,7 +224,7 @@ func TestDbStatsDAO_Get_IsSorted(t *testing.T) {
 
 	var statsDAO = NewDBStatsDAO(db).(*dbStatsDAO)
 	var statsSlice, sliceErr = statsDAO.GetStatsSlice(
-		[]time.Time{testData[1].before, testData[0].before},
+		[]time.Time{testData[1].before, testData[0].before},	// data given in the reversed order
 		model.Like, limit,
 	)
 
@@ -276,5 +287,9 @@ func TestDbStatsDAO_Get_DBFail(t *testing.T) {
 
 	if sliceErr == nil {
 		t.Error("Had to crash")
+	}
+
+	if sliceErr.Error() != "Failed to get" {
+		t.Errorf("Wrong error expected %v got %v", "\"Failed to get\"", sliceErr.Error())
 	}
 }

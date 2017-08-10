@@ -3,10 +3,10 @@ package model
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"strings"
-	"fmt"
 )
 
 // This type represents a function, which reads data from reader to dest

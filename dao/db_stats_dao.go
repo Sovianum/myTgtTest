@@ -5,6 +5,7 @@ import (
 	"github.com/Sovianum/myTgtTest/model"
 	"sort"
 	"time"
+	"errors"
 )
 
 const (
@@ -67,6 +68,10 @@ func (statsDao *dbStatsDAO) GetStatsSlice(dates []time.Time, action string, limi
 }
 
 func (statsDao *dbStatsDAO) getItem(date time.Time, action string, limit int) (model.StatsItem, error) {
+	if !model.IsValidAction(action) {
+		return model.StatsItem{}, errors.New(model.StatsInvalidAction)
+	}
+
 	var before = time.Date(date.Year(), date.Month(), date.Day(), 0, 0, 0, 0, time.UTC)
 	var after = before.Add(24 * time.Hour)
 

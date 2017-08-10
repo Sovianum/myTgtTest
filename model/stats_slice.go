@@ -1,30 +1,28 @@
 package model
 
 import (
-	"time"
 	"fmt"
+	"time"
 )
 
-type Calendar time.Time
+type QuotedDate time.Time
 
-func (c Calendar) MarshalJSON() ([]byte, error) {
-	ts := time.Time(c).Format("2006-01-02")
+func (q QuotedDate) MarshalJSON() ([]byte, error) {
+	ts := time.Time(q).Format("2006-01-02")
 	stamp := fmt.Sprintf("\"%s\"", ts)
 
 	return []byte(stamp), nil
 }
 
-func (c *Calendar) UnmarshalJSON(b []byte) error {
-	var layout = "2006-01-02"
-
+func (q *QuotedDate) UnmarshalJSON(b []byte) error {
 	var inputS = string(b)
-	var ts, err = time.Parse(layout, inputS[1:len(inputS)-1]) // slicing removes quotes
+	var ts, err = time.Parse("\"2006-01-02\"", inputS)
 
 	if err != nil {
 		return err
 	}
 
-	*c = Calendar(ts)
+	*q = QuotedDate(ts)
 	return nil
 }
 
@@ -37,12 +35,12 @@ func NewStatsSlice() StatsSlice {
 }
 
 type StatsItem struct {
-	Date Calendar `json:"date"`
+	Date QuotedDate `json:"date"`
 	Rows []Row    `json:"rows"`
 }
 
 func NewItem(date time.Time) StatsItem {
-	return StatsItem{Date: Calendar(date), Rows: make([]Row, 0)}
+	return StatsItem{Date: QuotedDate(date), Rows: make([]Row, 0)}
 }
 
 type Row struct {

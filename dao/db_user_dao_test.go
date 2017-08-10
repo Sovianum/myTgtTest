@@ -72,7 +72,7 @@ func TestDbUserDAO_Exists_DBFailed(t *testing.T) {
 	defer db.Close()
 
 	mock.
-	ExpectQuery("SELECT count").
+		ExpectQuery("SELECT count").
 		WithArgs(10).
 		WillReturnError(errors.New("Failed to check"))
 
@@ -81,6 +81,10 @@ func TestDbUserDAO_Exists_DBFailed(t *testing.T) {
 
 	if dbErr == nil {
 		t.Error("Had to crash")
+	}
+
+	if dbErr.Error() != "Failed to check" {
+		t.Errorf("Wrong error expected %v got %v", "\"Failed to check\"", dbErr.Error())
 	}
 }
 
@@ -117,9 +121,8 @@ func TestDbUserDAO_Save_DuplicateId(t *testing.T) {
 
 	mock.
 		ExpectExec("INSERT INTO").
-		WithArgs(1, 1, 1).
+		WithArgs(1, 1, model.FEMALE).
 		WillReturnError(errors.New("Duplicate id"))
-		//WillReturnResult(sqlmock.NewResult(1, 1))
 
 	var r = model.Registration{Id: 1, Age: 1, Sex: model.FEMALE}
 
@@ -127,6 +130,10 @@ func TestDbUserDAO_Save_DuplicateId(t *testing.T) {
 	var saveErr = userDAO.Save(r)
 
 	if saveErr == nil {
-		t.Error("Had to fail with \"Duplicate id\" error")
+		t.Error("Had to crash")
+	}
+
+	if saveErr.Error() != "Duplicate id" {
+		t.Errorf("Wrong error expected %v got %v", "\"Duplicate id\"", saveErr.Error())
 	}
 }
