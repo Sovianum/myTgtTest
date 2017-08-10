@@ -2,25 +2,39 @@ package main
 
 import (
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"github.com/Sovianum/myTgtTest/handlers"
 	"github.com/gorilla/mux"
 	_ "github.com/lib/pq"
 	"net/http"
+	"os"
 )
 
-const (
-	Port       = 8080
-	DriverName = "postgres"
-	DBUser     = "go_user"
-	DBPassword = "go"
-	DBName     = "my_target_db"
-)
+type Configuration struct {
+	Port       int
+	DriverName string
+	DBUser     string
+	DBPassword string
+	DBName     string
+}
 
 func main() {
+	var file, confErr = os.Open("conf.json")
+	if confErr != nil {
+		panic(confErr)
+	}
+	defer file.Close()
+	var conf = Configuration{}
+
+	var parseErr = json.NewDecoder(file).Decode(&conf)
+	if parseErr != nil {
+		panic(parseErr)
+	}
+
 	var db, err = sql.Open(
-		DriverName,
-		getDBStr(DBUser, DBPassword, DBName),
+		conf.DriverName,
+		getDBStr(conf.DBUser, conf.DBPassword, conf.DBName),
 	)
 	if err != nil {
 		panic(err)
@@ -35,7 +49,7 @@ func main() {
 	router.HandleFunc("/api/users/stats/top", env.GetStatsRequestHandler())
 
 	http.Handle("/", router)
-	http.ListenAndServe(fmt.Sprintf(":%d", Port), router)
+	http.ListenAndServe(fmt.Sprintf(":%d", conf.Port), router)
 }
 
 func getDBStr(user string, pass string, name string) string {

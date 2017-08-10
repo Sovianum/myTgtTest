@@ -224,7 +224,7 @@ func TestDbStatsDAO_Get_IsSorted(t *testing.T) {
 
 	var statsDAO = NewDBStatsDAO(db).(*dbStatsDAO)
 	var statsSlice, sliceErr = statsDAO.GetStatsSlice(
-		[]time.Time{testData[1].before, testData[0].before},	// data given in the reversed order
+		[]time.Time{testData[1].before, testData[0].before}, // data given in the reversed order
 		model.Like, limit,
 	)
 

@@ -2,10 +2,10 @@ package dao
 
 import (
 	"database/sql"
+	"errors"
 	"github.com/Sovianum/myTgtTest/model"
 	"sort"
 	"time"
-	"errors"
 )
 
 const (

@@ -36,7 +36,7 @@ func NewStatsSlice() StatsSlice {
 
 type StatsItem struct {
 	Date QuotedDate `json:"date"`
-	Rows []Row    `json:"rows"`
+	Rows []Row      `json:"rows"`
 }
 
 func NewItem(date time.Time) StatsItem {
