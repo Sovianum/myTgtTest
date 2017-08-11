@@ -44,9 +44,9 @@ func main() {
 	var env = handlers.NewDBEnv(db)
 
 	var router = mux.NewRouter()
-	router.HandleFunc("/api/users", env.GetRegisterHandler())
-	router.HandleFunc("/api/users/stats", env.GetStatsAddHandler())
-	router.HandleFunc("/api/users/stats/top", env.GetStatsRequestHandler())
+	router.Methods(http.MethodPost).Path("/api/users").HandlerFunc(env.GetRegisterHandler())
+	router.Methods(http.MethodPost).Path("/api/users/stats").HandlerFunc(env.GetStatsAddHandler())
+	router.Methods(http.MethodGet).Path("/api/users/stats/top").HandlerFunc(env.GetStatsRequestHandler())
 
 	http.Handle("/", router)
 	http.ListenAndServe(fmt.Sprintf(":%d", conf.Port), router)

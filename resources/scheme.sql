@@ -1,36 +1,25 @@
-
-DROP TABLE IF EXISTS Sex CASCADE ;
-DROP TABLE IF EXISTS Action CASCADE ;
+DROP INDEX IF EXISTS stats_ts_idx ;
+DROP INDEX IF EXISTS stats_userid_idx ;
 DROP TABLE IF EXISTS Client CASCADE ;
 DROP TABLE IF EXISTS Stats CASCADE;
+DROP TYPE IF EXISTS Esex CASCADE ;
+DROP TYPE IF EXISTS EAction CASCADE ;
 
-CREATE TABLE Sex (
-  code SERIAL PRIMARY KEY ,
-  str VARCHAR(1)
-);
-
-CREATE TABLE Action (
-  code SERIAL PRIMARY KEY ,
-  str VARCHAR(20)
-);
+CREATE TYPE ESex AS ENUM ('M', 'F');
+CREATE TYPE EAction AS ENUM ('login', 'like', 'comments', 'exit');
 
 CREATE TABLE Client (
   id INTEGER PRIMARY KEY ,
   age INTEGER,
-  sex INT REFERENCES Sex(code)
+  sex ESex
 );
 
 CREATE TABLE Stats (
-  id SERIAL,
+  id SERIAL PRIMARY KEY ,
   userId INTEGER REFERENCES Client(id),
   ts TIMESTAMP,
-  action INT REFERENCES Action(code)
+  action EAction
 );
 
-INSERT INTO Sex (str) VALUES ('M');
-INSERT INTO Sex (str) VALUES ('F');
-
-INSERT INTO Action (str) VALUES ('login');
-INSERT INTO Action (str) VALUES ('like');
-INSERT INTO Action (str) VALUES ('comments');
-INSERT INTO Action (str) VALUES ('exit');
+CREATE INDEX stats_userid_idx ON Stats (userId);
+CREATE INDEX stats_ts_idx ON Stats (ts);

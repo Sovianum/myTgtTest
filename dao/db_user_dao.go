@@ -6,7 +6,7 @@ import (
 )
 
 const (
-	saveUser  = `INSERT INTO Client (id, age, sex) SELECT $1, $2, code FROM Sex WHERE str = $3`
+	saveUser  = `INSERT INTO Client (id, age, sex) SELECT $1, $2, $3`
 	checkUser = `SELECT count(*) cnt FROM Client u WHERE u.id = $1`
 )
 

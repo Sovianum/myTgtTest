@@ -14,19 +14,30 @@ const (
 	urlSample = "/urlSample"
 )
 
-func TestEnv_GetRegisterHandler_Method(t *testing.T) {
-	var getRR, getErr = getRecorder(urlSample, http.MethodGet, new(Env).GetRegisterHandler(), nil)
-	if getErr != nil {
-		t.Fatal(getErr)
+type headerPair struct {
+	key string
+	value string
+}
+
+func TestEnv_GetRegisterHandler_ContentType(t *testing.T) {
+	var rr, err = getRecorder(urlSample, http.MethodPost, new(Env).GetRegisterHandler(), nil)
+	if err != nil {
+		t.Fatal(err)
 	}
 
-	if status := getRR.Code; status != http.StatusMethodNotAllowed {
-		t.Errorf("Method get not allowed for this request: got %v expected %v", status, http.StatusMethodNotAllowed)
+	if status := rr.Code; status != http.StatusUnsupportedMediaType {
+		t.Errorf("Expected %v, got %v", http.StatusUnsupportedMediaType, status)
 	}
 }
 
 func TestEnv_GetRegisterHandler_EmptyBody(t *testing.T) {
-	var rr, err = getRecorder(urlSample, http.MethodPost, new(Env).GetRegisterHandler(), nil)
+	var rr, err = getRecorder(
+		urlSample,
+		http.MethodPost,
+		new(Env).GetRegisterHandler(),
+		nil,
+		headerPair{"Content-Type", "application/json"},
+	)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -47,6 +58,7 @@ func TestEnv_GetRegisterHandler_JSONUnparsable(t *testing.T) {
 		http.MethodPost,
 		new(Env).GetRegisterHandler(),
 		strings.NewReader("{it is badly formatted json}"),
+		headerPair{"Content-Type", "application/json"},
 	)
 	if err != nil {
 		t.Fatal(err)
@@ -73,6 +85,7 @@ func TestEnv_GetRegisterHandler_IncompleteData(t *testing.T) {
 			http.MethodPost,
 			new(Env).GetRegisterHandler(),
 			strings.NewReader(item.inputMsg),
+			headerPair{"Content-Type", "application/json"},
 		)
 		if err != nil {
 			t.Fatal(err)
@@ -104,6 +117,7 @@ func TestEnv_GetRegisterHandler_IncorrectData(t *testing.T) {
 			http.MethodPost,
 			new(Env).GetRegisterHandler(),
 			strings.NewReader(item.inputMsg),
+			headerPair{"Content-Type", "application/json"},
 		)
 		if err != nil {
 			t.Fatal(err)
@@ -125,6 +139,7 @@ func TestEnv_GetRegisterHandler_Uniqueness(t *testing.T) {
 		http.MethodPost,
 		successEnv.GetRegisterHandler(),
 		strings.NewReader(inputMsg),
+		headerPair{"Content-Type", "application/json"},
 	)
 	if successRecErr != nil {
 		t.Fatal(successRecErr)
@@ -138,6 +153,7 @@ func TestEnv_GetRegisterHandler_Uniqueness(t *testing.T) {
 		http.MethodPost,
 		failEnv.GetRegisterHandler(),
 		strings.NewReader(inputMsg),
+		headerPair{"Content-Type", "application/json"},
 	)
 	if failRecErr != nil {
 		t.Fatal(successRecErr)
@@ -147,19 +163,14 @@ func TestEnv_GetRegisterHandler_Uniqueness(t *testing.T) {
 	}
 }
 
-func TestEnv_GetStatsAddHandler_Method(t *testing.T) {
-	var getRR, getErr = getRecorder(urlSample, http.MethodGet, new(Env).GetStatsAddHandler(), nil)
-	if getErr != nil {
-		t.Fatal(getErr)
-	}
-
-	if status := getRR.Code; status != http.StatusMethodNotAllowed {
-		t.Errorf("Method get not allowed for this request: got %v expected %v", status, http.StatusMethodNotAllowed)
-	}
-}
-
 func TestEnv_GetStatsAddHandler_EmptyBody(t *testing.T) {
-	var rr, err = getRecorder(urlSample, http.MethodPost, new(Env).GetStatsAddHandler(), nil)
+	var rr, err = getRecorder(
+		urlSample,
+		http.MethodPost,
+		new(Env).GetStatsAddHandler(),
+		nil,
+		headerPair{"Content-Type", "application/json"},
+	)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -179,6 +190,7 @@ func TestEnv_GetStatsAddHandler_JSONUnparsable(t *testing.T) {
 		http.MethodPost,
 		new(Env).GetStatsAddHandler(),
 		strings.NewReader("{it is badly formatted json}"),
+		headerPair{"Content-Type", "application/json"},
 	)
 	if err != nil {
 		t.Fatal(err)
@@ -205,6 +217,7 @@ func TestEnv_GetStatsAddHandler_IncompleteData(t *testing.T) {
 			http.MethodPost,
 			new(Env).GetStatsAddHandler(),
 			strings.NewReader(item.inputMsg),
+			headerPair{"Content-Type", "application/json"},
 		)
 		if err != nil {
 			t.Fatal(err)
@@ -233,6 +246,7 @@ func TestEnv_GetStatsAddHandler_IncorrectData(t *testing.T) {
 			http.MethodPost,
 			new(Env).GetStatsAddHandler(),
 			strings.NewReader(item.inputMsg),
+			headerPair{"Content-Type", "application/json"},
 		)
 		if err != nil {
 			t.Fatal(err)
@@ -253,6 +267,7 @@ func TestEnv_GetStatsAddHandler_UserNotExist(t *testing.T) {
 		http.MethodPost,
 		failEnv.GetStatsAddHandler(),
 		strings.NewReader(inputMsg),
+		headerPair{"Content-Type", "application/json"},
 	)
 	if err != nil {
 		t.Fatal(err)
@@ -272,6 +287,7 @@ func TestEnv_GetStatsAddHandler_Success(t *testing.T) {
 		http.MethodPost,
 		failEnv.GetStatsAddHandler(),
 		strings.NewReader(inputMsg),
+		headerPair{"Content-Type", "application/json"},
 	)
 	if err != nil {
 		t.Fatal(err)
@@ -279,17 +295,6 @@ func TestEnv_GetStatsAddHandler_Success(t *testing.T) {
 
 	if status := rec.Code; status != http.StatusOK {
 		t.Errorf("Expected status code %v, got %v", http.StatusOK, status)
-	}
-}
-
-func TestEnv_GetStatsRequestHandler_Method(t *testing.T) {
-	var rec, err = getRecorder(urlSample, http.MethodPost, new(Env).GetStatsRequestHandler(), nil)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if status := rec.Code; status != http.StatusMethodNotAllowed {
-		t.Errorf("Method get not allowed for this request: got %v expected %v", status, http.StatusMethodNotAllowed)
 	}
 }
 
@@ -394,12 +399,16 @@ func TestEnv_GetStatsRequestHandler_Success(t *testing.T) {
 	}
 }
 
-func getRecorder(url string, method string, handlerFunc HandlerType, body io.Reader) (*httptest.ResponseRecorder, error) {
+func getRecorder(url string, method string, handlerFunc HandlerType, body io.Reader, headers ...headerPair) (*httptest.ResponseRecorder, error) {
 	var req, err = http.NewRequest(
 		method,
 		url,
 		body,
 	)
+
+	for _, hp := range headers {
+		req.Header.Set(hp.key, hp.value)
+	}
 
 	if err != nil {
 		return nil, err

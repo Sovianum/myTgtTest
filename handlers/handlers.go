@@ -16,6 +16,7 @@ import (
 
 const (
 	userNotFound      = "\"User not found\""
+	userAlreadyExists = "\"User already exists\""
 	emptyBodyMsg      = "\"Empty body not allowed\""
 	requiredActionMsg = "\"Required \"action\" query parameter\""
 	requiredLimitMsg  = "\"Required \"limit\" query parameter\""
@@ -57,16 +58,28 @@ func (env *Env) GetRegisterHandler() HandlerType {
 			return
 		}
 
+		var exists, existsError = env.userDAO.Exists(registration.Id)
+		if existsError != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(existsError.Error()))
+		}
+
+		if exists {
+			w.WriteHeader(http.StatusConflict)
+			w.Write([]byte(userAlreadyExists))
+			return
+		}
+
 		var saveError = env.userDAO.Save(registration)
 		if saveError != nil {
-			w.WriteHeader(http.StatusConflict)
+			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(saveError.Error()))
 			return
 		}
 	}
 
-	return ValidateMethod(
-		http.MethodPost,
+	return ValidateContentType(
+		"application/json",
 		ValidateNonEmptyBody(
 			emptyBodyMsg,
 			innerFunc,
@@ -99,14 +112,14 @@ func (env *Env) GetStatsAddHandler() HandlerType {
 
 		var saveError = env.statsDAO.Save(stats)
 		if saveError != nil {
-			w.WriteHeader(http.StatusConflict)
+			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(saveError.Error()))
 			return
 		}
 	}
 
-	return ValidateMethod(
-		http.MethodPost,
+	return ValidateContentType(
+		"application/json",
 		ValidateNonEmptyBody(
 			emptyBodyMsg,
 			innerFunc,
@@ -115,7 +128,7 @@ func (env *Env) GetStatsAddHandler() HandlerType {
 }
 
 func (env *Env) GetStatsRequestHandler() HandlerType {
-	var innerFunc = func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
 		var query = r.URL.Query()
 		var checkErr = checkFieldsExistence(
 			query,
@@ -144,7 +157,7 @@ func (env *Env) GetStatsRequestHandler() HandlerType {
 		}
 
 		var statsSlice, err = env.statsDAO.GetStatsSlice(dateSlice, action, limit)
-		if parseErr != nil {
+		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(err.Error()))
 			return
@@ -153,11 +166,6 @@ func (env *Env) GetStatsRequestHandler() HandlerType {
 		var msg, _ = json.Marshal(statsSlice)
 		w.Write(msg)
 	}
-
-	return ValidateMethod(
-		http.MethodGet,
-		innerFunc,
-	)
 }
 
 // Function returns error if some of names in nameSlice not present in query.

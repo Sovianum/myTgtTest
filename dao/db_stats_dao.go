@@ -4,22 +4,21 @@ import (
 	"database/sql"
 	"errors"
 	"github.com/Sovianum/myTgtTest/model"
-	"sort"
 	"time"
+	"fmt"
+	"strings"
 )
 
 const (
-	saveStats = `INSERT INTO Stats (userId, ts, action) SELECT $1, $2, code FROM Action WHERE str = $3`
-	getStats  = `
-	SELECT c.id id, c.age age, ss.str sex, count(*) cnt FROM
+	saveStats = `INSERT INTO Stats (userId, ts, action) SELECT $1, date_trunc('day', CAST($2 AS TIMESTAMP)), $3`
+	newGetStatsTemplate = `
+	SELECT c.id id, c.age age, c.sex sex, count(*) cnt, s.ts ts FROM
 	  Client c
-	  JOIN Sex ss ON ss.code = c.sex
-	  JOIN Stats st ON c.id = st.userId
-	  JOIN Action a ON a.code = st.action
-	WHERE st.ts >= $1 AND st.ts < $2 AND a.str = $3
-	GROUP BY c.id, ss.str
-	ORDER BY cnt DESC
-	LIMIT $4;
+	  JOIN Stats s ON c.id = s.userId
+	WHERE s.ts IN ( %s ) AND s.action = $%d
+	GROUP BY s.ts, c.id
+	ORDER BY s.ts, cnt DESC
+	LIMIT $%d;
 	`
 )
 
@@ -38,65 +37,99 @@ func (statsDao *dbStatsDAO) Save(s model.Stats) error {
 	return err
 }
 
+type getStatsOutputRow struct {
+	id uint
+	age uint
+	sex string
+	count uint
+	ts time.Time
+}
+
 func (statsDao *dbStatsDAO) GetStatsSlice(dates []time.Time, action string, limit int) (model.StatsSlice, error) {
+	if !model.IsValidAction(action) {
+		return model.NewStatsSlice(), errors.New(model.StatsInvalidAction)
+	}
+
 	if len(dates) == 0 {
 		return model.NewStatsSlice(), nil
 	}
 
-	var datesCopy = make([]time.Time, len(dates))
-	copy(datesCopy, dates)
-
-	sort.Slice(datesCopy, func(i, j int) bool {
-		return datesCopy[i].Before(datesCopy[j])
-	})
-
-	var err error
-	var item model.StatsItem
-	var result = model.NewStatsSlice()
-
-	for _, date := range datesCopy {
-		item, err = statsDao.getItem(date, action, limit)
-
-		if err != nil {
-			break
-		}
-
-		result.Items = append(result.Items, item)
-	}
-
-	return result, err
-}
-
-func (statsDao *dbStatsDAO) getItem(date time.Time, action string, limit int) (model.StatsItem, error) {
-	if !model.IsValidAction(action) {
-		return model.StatsItem{}, errors.New(model.StatsInvalidAction)
-	}
-
-	var before = time.Date(date.Year(), date.Month(), date.Day(), 0, 0, 0, 0, time.UTC)
-	var after = before.Add(24 * time.Hour)
-
-	var rows, dbErr = statsDao.db.Query(getStats, before, after, action, limit)
+	var query = getStatsSelectQuery(len(dates))
+	var args = getStatsSelectArgs(dates, action, limit)
+	var rows, dbErr = statsDao.db.Query(query, args...)
 	if dbErr != nil {
-		return model.StatsItem{}, dbErr
+		return model.StatsSlice{}, dbErr
 	}
-	defer rows.Close()
 
-	var result = model.NewItem(date)
-
+	var queryResult = make([]getStatsOutputRow, 0)
 	var err error
 	for rows.Next() {
-		var row = model.Row{}
-		err = rows.Scan(&row.Id, &row.Age, &row.Sex, &row.Count)
+		var row = getStatsOutputRow{}
+		err = rows.Scan(&row.id, &row.age, &row.sex, &row.count, &row.ts)
 		if err != nil {
 			break
 		}
 
-		result.Rows = append(result.Rows, row)
+		queryResult = append(queryResult, row)
 	}
 
 	if err == nil {
 		err = rows.Err()
 	}
+	if err != nil {
+		return model.StatsSlice{}, err
+	}
 
-	return result, err
+	var result = processGetStatsOutputRows(queryResult)
+
+	return result, nil
+}
+
+func processGetStatsOutputRows(rows []getStatsOutputRow) model.StatsSlice {
+	if len(rows) == 0 {
+		return model.NewStatsSlice()
+	}
+
+	var result = model.NewStatsSlice()
+	var currItem = model.NewItem(rows[0].ts)
+	for _, row := range rows {
+		if row.ts != time.Time(currItem.Date) {
+			result.Items = append(result.Items, currItem)
+			currItem = model.NewItem(row.ts)
+		}
+
+		currItem.Rows = append(currItem.Rows, model.Row{
+			Id: row.id,
+			Age: row.age,
+			Sex:row.sex,
+			Count:row.count,
+		})
+	}
+
+	if len(result.Items) == 0 || currItem.Date != result.Items[len(result.Items) - 1].Date {
+		result.Items = append(result.Items, currItem)
+	}
+
+	return result
+}
+
+func getStatsSelectArgs(dates []time.Time, action string, limit int) []interface{} {
+	var result = make([]interface{}, 0)
+
+	for i := range dates {
+		result = append(result, dates[i])
+	}
+	result = append(result, action, limit)
+	return result
+}
+
+func getStatsSelectQuery(dateCount int) string {
+	var dateNumSlice = make([]string, 0)
+
+	for i := 1; i != dateCount + 1; i++ {
+		dateNumSlice = append(dateNumSlice, fmt.Sprintf("$%d", i))
+	}
+
+	var dateStr = strings.Join(dateNumSlice, ", ")
+	return fmt.Sprintf(newGetStatsTemplate, dateStr, dateCount + 1, dateCount + 2)
 }

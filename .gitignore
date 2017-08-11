@@ -18,3 +18,5 @@
 # IDE files
 .idea
 bin
+/notes.txt
+/resources/test.sql

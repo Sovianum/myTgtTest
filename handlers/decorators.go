@@ -4,14 +4,17 @@ import (
 	"net/http"
 )
 
-// This function is a decorator which takes a request handler and httpMethod as input
-// and returns another handler returning MethodNotAllowed status code if requested with another method
-func ValidateMethod(methodName string, handler HandlerType) HandlerType {
+// This function is a decorator which takes a request handler and contentType as input
+// and returns another handler returning UnsupportedMediaType status code if requested
+// with wrong content type header
+func ValidateContentType(contentType string, handler HandlerType) HandlerType {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != methodName {
-			w.WriteHeader(http.StatusMethodNotAllowed)
+		var gotContentType = r.Header.Get("Content-Type")
+		if gotContentType != contentType {
+			w.WriteHeader(http.StatusUnsupportedMediaType)
 			return
 		}
+
 		handler(w, r)
 	}
 }
