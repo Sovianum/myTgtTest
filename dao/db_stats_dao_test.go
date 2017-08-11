@@ -7,6 +7,7 @@ import (
 	"strings"
 	"testing"
 	"time"
+	"fmt"
 )
 
 func TestDbStatsDAO_Save_Success(t *testing.T) {
@@ -150,5 +151,117 @@ func TestDbStatsDAO_Get_DBFail(t *testing.T) {
 
 	if sliceErr.Error() != "Failed to get" {
 		t.Errorf("Wrong error expected %v got %v", "\"Failed to get\"", sliceErr.Error())
+	}
+}
+
+func TestProcessGetStatsOutputRows_Empty(t *testing.T) {
+	var testData = []getStatsOutputRow{}
+	var output = processGetStatsOutputRows(testData)
+
+	if len(output.Items) != 0 {
+		t.Error(fmt.Sprintf("Expected %v, got %v", 0, len(output.Items)))
+	}
+}
+
+func TestProcessGetStatsOutputRows_RepeatingData(t *testing.T) {
+	var date1 = time.Now()
+	var date2 = date1.Add(time.Hour)
+
+	var testData = []getStatsOutputRow{
+		{ts:date1, count:10, sex:"F", age:10, id:100},
+		{ts:date1, count:10, sex:"F", age:10, id:100},
+		{ts:date2, count:10, sex:"F", age:10, id:100},
+		{ts:date2, count:10, sex:"F", age:10, id:100},
+		{ts:date2, count:10, sex:"F", age:10, id:100},
+	}
+	var output = processGetStatsOutputRows(testData)
+
+	if len(output.Items) != 2 {
+		t.Error(fmt.Sprintf("Expected %v, got %v", 2, len(output.Items)))
+	}
+
+	if len(output.Items[0].Rows) != 2 {
+		t.Error(fmt.Sprintf("Expected %v, got %v", 2, len(output.Items[0].Rows)))
+	}
+
+	if len(output.Items[1].Rows) != 3 {
+		t.Error(fmt.Sprintf("Expected %v, got %v", 3, len(output.Items[1].Rows)))
+	}
+}
+
+func TestProcessGetStatsOutputRows_OneElement(t *testing.T) {
+	var testData = []getStatsOutputRow{
+		{ts:time.Now(), count:10, sex:"F", age:10, id:100},
+	}
+	var output = processGetStatsOutputRows(testData)
+
+	if len(output.Items) != 1 {
+		t.Error(fmt.Sprintf("Expected %v, got %v", 1, len(output.Items)))
+	}
+
+	if time.Time(output.Items[0].Date) != testData[0].ts {
+		t.Error(fmt.Sprintf("Expected %v, got %v", testData[0].ts, time.Time(output.Items[0].Date)))
+	}
+
+	if output.Items[0].Rows[0].Id != testData[0].id {
+		t.Error(fmt.Sprintf("Expected %v, got %v", testData[0].id, output.Items[0].Rows[0].Id))
+	}
+
+	if output.Items[0].Rows[0].Count != testData[0].count {
+		t.Error(fmt.Sprintf("Expected %v, got %v", testData[0].count, output.Items[0].Rows[0].Count))
+	}
+
+	if output.Items[0].Rows[0].Sex != testData[0].sex {
+		t.Error(fmt.Sprintf("Expected %v, got %v", testData[0].sex, output.Items[0].Rows[0].Sex))
+	}
+
+	if output.Items[0].Rows[0].Age != testData[0].age {
+		t.Error(fmt.Sprintf("Expected %v, got %v", testData[0].age, output.Items[0].Rows[0].Age))
+	}
+}
+
+func TestGetStatsSelectArgs(t *testing.T) {
+	var dates = []time.Time{time.Now(), time.Now().Add(time.Hour)}
+	var action = "some"
+	var limit = 100
+
+	var args = getStatsSelectArgs(dates, action, limit)
+
+	if len(args) != 4 {
+		t.Error(fmt.Sprintf("Expected %v, got %v", 4, len(args)))
+	}
+
+	if gotTime := args[0].(time.Time); gotTime != dates[0] {
+		t.Error(fmt.Sprintf("Expected %v, got %v", dates[0], gotTime))
+	}
+
+	if gotTime := args[1].(time.Time); gotTime != dates[1] {
+		t.Error(fmt.Sprintf("Expected %v, got %v", dates[1], gotTime))
+	}
+
+	if gotAction := args[2].(string); gotAction != action {
+		t.Error(fmt.Sprintf("Expected %v, got %v", action, gotAction))
+	}
+
+	if gotLimit := args[3].(int); gotLimit != limit {
+		t.Error(fmt.Sprintf("Expected %v, got %v", action, gotLimit))
+	}
+}
+
+func TestGetStatsSelectQuery(t *testing.T) {
+	var correctQuery = `
+	SELECT c.id id, c.age age, c.sex sex, count(*) cnt, s.ts ts FROM
+	  Client c
+	  JOIN Stats s ON c.id = s.userId
+	WHERE s.ts IN ( $1, $2, $3 ) AND s.action = $4
+	GROUP BY s.ts, c.id
+	ORDER BY s.ts, cnt DESC
+	LIMIT $5;
+	`
+
+	var gotQuery = getStatsSelectQuery(3)
+
+	if correctQuery != gotQuery {
+		t.Error(fmt.Sprintf("Expected \n \"%s\"\n got \n\"%s\"", correctQuery, gotQuery))
 	}
 }

@@ -62,6 +62,7 @@ func (env *Env) GetRegisterHandler() HandlerType {
 		if existsError != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(existsError.Error()))
+			return
 		}
 
 		if exists {

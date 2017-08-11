@@ -15,7 +15,7 @@ const (
 )
 
 type headerPair struct {
-	key string
+	key   string
 	value string
 }
 
@@ -163,6 +163,25 @@ func TestEnv_GetRegisterHandler_Uniqueness(t *testing.T) {
 	}
 }
 
+func TestEnv_GetRegisterHandler_DBError(t *testing.T) {
+	var inputMsg = "{\"id\":1, \"age\":1, \"sex\":\"M\"}"
+	var env = &Env{userDAO:new(mocks.FailUserDAOMock)}
+
+	var rec, err = getRecorder(
+		urlSample,
+		http.MethodPost,
+		env.GetRegisterHandler(),
+		strings.NewReader(inputMsg),
+		headerPair{"Content-Type", "application/json"},
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if status := rec.Code; status != http.StatusInternalServerError {
+		t.Errorf("Expected status code %v, got %v", http.StatusInternalServerError, status)
+	}
+}
+
 func TestEnv_GetStatsAddHandler_EmptyBody(t *testing.T) {
 	var rr, err = getRecorder(
 		urlSample,
@@ -278,9 +297,29 @@ func TestEnv_GetStatsAddHandler_UserNotExist(t *testing.T) {
 	}
 }
 
+func TestEnv_GetStatsAddHandler_DBError(t *testing.T) {
+	var inputMsg = "{\"user\":100, \"action\":\"like\", \"ts\":\"2017-06-30T14:12:34\"}"
+	var failEnv = &Env{userDAO: new(mocks.FailUserDAOMock)}
+
+	var rec, err = getRecorder(
+		urlSample,
+		http.MethodPost,
+		failEnv.GetStatsAddHandler(),
+		strings.NewReader(inputMsg),
+		headerPair{"Content-Type", "application/json"},
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if status := rec.Code; status != http.StatusInternalServerError {
+		t.Errorf("Expected status code %v, got %v", http.StatusInternalServerError, status)
+	}
+}
+
 func TestEnv_GetStatsAddHandler_Success(t *testing.T) {
 	var inputMsg = "{\"user\":100, \"action\":\"like\", \"ts\":\"2017-06-30T14:12:34\"}"
-	var failEnv = &Env{userDAO: new(mocks.ExistUserDAOMock), statsDAO: new(mocks.SuccessStatsDaoMock)}
+	var failEnv = &Env{userDAO: new(mocks.ExistUserDAOMock), statsDAO: new(mocks.SuccessStatsDAOMock)}
 
 	var rec, err = getRecorder(
 		urlSample,
@@ -368,6 +407,26 @@ func TestEnv_GetStatsRequestHandler_BadQueryString(t *testing.T) {
 	}
 }
 
+func TestEnv_GetStatsRequestHandler_DBError(t *testing.T) {
+	var url = "/urlSample?date1=2017-06-20&date2=2017-06-30&action=comments&limit=10"
+	var env = &Env{statsDAO:new(mocks.FailStatsDAOMock)}
+
+	var rec, err = getRecorder(
+		url,
+		http.MethodGet,
+		env.GetStatsRequestHandler(),
+		nil,
+	)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if status := rec.Code; status != http.StatusInternalServerError {
+		t.Errorf("Expected %v, got %v", http.StatusInternalServerError, status)
+	}
+}
+
 func TestEnv_GetStatsRequestHandler_Success(t *testing.T) {
 	var testData = []struct {
 		url            string
@@ -379,7 +438,7 @@ func TestEnv_GetStatsRequestHandler_Success(t *testing.T) {
 		},
 	}
 
-	var env = &Env{statsDAO: &mocks.SuccessStatsDaoMock{}}
+	var env = &Env{statsDAO: &mocks.SuccessStatsDAOMock{}}
 
 	for _, item := range testData {
 		var rec, err = getRecorder(

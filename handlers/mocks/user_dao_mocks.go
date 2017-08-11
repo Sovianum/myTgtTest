@@ -24,3 +24,13 @@ func (*NotExistUserDAOMock) Save(model.Registration) error {
 func (*NotExistUserDAOMock) Exists(uint) (bool, error) {
 	return false, nil
 }
+
+type FailUserDAOMock struct {}
+
+func (*FailUserDAOMock) Save(model.Registration) error {
+	return errors.New("Failed to save")
+}
+
+func (*FailUserDAOMock) Exists(uint) (bool, error) {
+	return false, errors.New("Failed to check")
+}

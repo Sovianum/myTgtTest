@@ -3,14 +3,14 @@ package dao
 import (
 	"database/sql"
 	"errors"
-	"github.com/Sovianum/myTgtTest/model"
-	"time"
 	"fmt"
+	"github.com/Sovianum/myTgtTest/model"
 	"strings"
+	"time"
 )
 
 const (
-	saveStats = `INSERT INTO Stats (userId, ts, action) SELECT $1, date_trunc('day', CAST($2 AS TIMESTAMP)), $3`
+	saveStats           = `INSERT INTO Stats (userId, ts, action) SELECT $1, date_trunc('day', CAST($2 AS TIMESTAMP)), $3`
 	newGetStatsTemplate = `
 	SELECT c.id id, c.age age, c.sex sex, count(*) cnt, s.ts ts FROM
 	  Client c
@@ -38,11 +38,11 @@ func (statsDao *dbStatsDAO) Save(s model.Stats) error {
 }
 
 type getStatsOutputRow struct {
-	id uint
-	age uint
-	sex string
+	id    uint
+	age   uint
+	sex   string
 	count uint
-	ts time.Time
+	ts    time.Time
 }
 
 func (statsDao *dbStatsDAO) GetStatsSlice(dates []time.Time, action string, limit int) (model.StatsSlice, error) {
@@ -85,6 +85,7 @@ func (statsDao *dbStatsDAO) GetStatsSlice(dates []time.Time, action string, limi
 	return result, nil
 }
 
+// function assumes rows to contain valid values
 func processGetStatsOutputRows(rows []getStatsOutputRow) model.StatsSlice {
 	if len(rows) == 0 {
 		return model.NewStatsSlice()
@@ -99,14 +100,14 @@ func processGetStatsOutputRows(rows []getStatsOutputRow) model.StatsSlice {
 		}
 
 		currItem.Rows = append(currItem.Rows, model.Row{
-			Id: row.id,
-			Age: row.age,
-			Sex:row.sex,
-			Count:row.count,
+			Id:    row.id,
+			Age:   row.age,
+			Sex:   row.sex,
+			Count: row.count,
 		})
 	}
 
-	if len(result.Items) == 0 || currItem.Date != result.Items[len(result.Items) - 1].Date {
+	if len(result.Items) == 0 || currItem.Date != result.Items[len(result.Items)-1].Date {
 		result.Items = append(result.Items, currItem)
 	}
 
@@ -123,13 +124,18 @@ func getStatsSelectArgs(dates []time.Time, action string, limit int) []interface
 	return result
 }
 
+// function assumes dateCount > 0
 func getStatsSelectQuery(dateCount int) string {
+	if dateCount <= 0 {
+		panic(fmt.Sprintf("dateCount must not be less then 1 (got %d)", dateCount))
+	}
+
 	var dateNumSlice = make([]string, 0)
 
-	for i := 1; i != dateCount + 1; i++ {
+	for i := 1; i != dateCount+1; i++ {
 		dateNumSlice = append(dateNumSlice, fmt.Sprintf("$%d", i))
 	}
 
 	var dateStr = strings.Join(dateNumSlice, ", ")
-	return fmt.Sprintf(newGetStatsTemplate, dateStr, dateCount + 1, dateCount + 2)
+	return fmt.Sprintf(newGetStatsTemplate, dateStr, dateCount+1, dateCount+2)
 }
