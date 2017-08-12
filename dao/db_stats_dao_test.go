@@ -2,12 +2,12 @@ package dao
 
 import (
 	"errors"
+	"fmt"
 	"github.com/Sovianum/myTgtTest/model"
 	"gopkg.in/DATA-DOG/go-sqlmock.v1"
 	"strings"
 	"testing"
 	"time"
-	"fmt"
 )
 
 func TestDbStatsDAO_Save_Success(t *testing.T) {
@@ -168,11 +168,11 @@ func TestProcessGetStatsOutputRows_RepeatingData(t *testing.T) {
 	var date2 = date1.Add(time.Hour)
 
 	var testData = []getStatsOutputRow{
-		{ts:date1, count:10, sex:"F", age:10, id:100},
-		{ts:date1, count:10, sex:"F", age:10, id:100},
-		{ts:date2, count:10, sex:"F", age:10, id:100},
-		{ts:date2, count:10, sex:"F", age:10, id:100},
-		{ts:date2, count:10, sex:"F", age:10, id:100},
+		{ts: date1, count: 10, sex: "F", age: 10, id: 100},
+		{ts: date1, count: 10, sex: "F", age: 10, id: 100},
+		{ts: date2, count: 10, sex: "F", age: 10, id: 100},
+		{ts: date2, count: 10, sex: "F", age: 10, id: 100},
+		{ts: date2, count: 10, sex: "F", age: 10, id: 100},
 	}
 	var output = processGetStatsOutputRows(testData)
 
@@ -191,7 +191,7 @@ func TestProcessGetStatsOutputRows_RepeatingData(t *testing.T) {
 
 func TestProcessGetStatsOutputRows_OneElement(t *testing.T) {
 	var testData = []getStatsOutputRow{
-		{ts:time.Now(), count:10, sex:"F", age:10, id:100},
+		{ts: time.Now(), count: 10, sex: "F", age: 10, id: 100},
 	}
 	var output = processGetStatsOutputRows(testData)
 

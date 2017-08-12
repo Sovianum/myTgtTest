@@ -20,3 +20,4 @@
 bin
 /notes.txt
 /resources/test.sql
+*.log

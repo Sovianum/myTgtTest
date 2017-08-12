@@ -20,7 +20,8 @@ type headerPair struct {
 }
 
 func TestEnv_GetRegisterHandler_ContentType(t *testing.T) {
-	var rr, err = getRecorder(urlSample, http.MethodPost, new(Env).GetRegisterHandler(), nil)
+	var env = &Env{Logger: defaultLogger()}
+	var rr, err = getRecorder(urlSample, http.MethodPost, env.GetRegisterHandler(), nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -31,10 +32,11 @@ func TestEnv_GetRegisterHandler_ContentType(t *testing.T) {
 }
 
 func TestEnv_GetRegisterHandler_EmptyBody(t *testing.T) {
+	var env = &Env{Logger: defaultLogger()}
 	var rr, err = getRecorder(
 		urlSample,
 		http.MethodPost,
-		new(Env).GetRegisterHandler(),
+		env.GetRegisterHandler(),
 		nil,
 		headerPair{"Content-Type", "application/json"},
 	)
@@ -53,10 +55,11 @@ func TestEnv_GetRegisterHandler_EmptyBody(t *testing.T) {
 }
 
 func TestEnv_GetRegisterHandler_JSONUnparsable(t *testing.T) {
+	var env = &Env{Logger: defaultLogger()}
 	var rr, err = getRecorder(
 		urlSample,
 		http.MethodPost,
-		new(Env).GetRegisterHandler(),
+		env.GetRegisterHandler(),
 		strings.NewReader("{it is badly formatted json}"),
 		headerPair{"Content-Type", "application/json"},
 	)
@@ -79,11 +82,12 @@ func TestEnv_GetRegisterHandler_IncompleteData(t *testing.T) {
 		{"{\"age\":100, \"id\":100}", model.RegistrationRequiredSex},
 	}
 
+	var env = &Env{Logger: defaultLogger()}
 	for _, item := range testData {
 		var rec, err = getRecorder(
 			urlSample,
 			http.MethodPost,
-			new(Env).GetRegisterHandler(),
+			env.GetRegisterHandler(),
 			strings.NewReader(item.inputMsg),
 			headerPair{"Content-Type", "application/json"},
 		)
@@ -111,11 +115,12 @@ func TestEnv_GetRegisterHandler_IncorrectData(t *testing.T) {
 		{"{\"id\":100, \"age\":100, \"sex\":90}"},
 	}
 
+	var env = &Env{Logger: defaultLogger()}
 	for _, item := range testData {
 		var rec, err = getRecorder(
 			urlSample,
 			http.MethodPost,
-			new(Env).GetRegisterHandler(),
+			env.GetRegisterHandler(),
 			strings.NewReader(item.inputMsg),
 			headerPair{"Content-Type", "application/json"},
 		)
@@ -131,8 +136,8 @@ func TestEnv_GetRegisterHandler_IncorrectData(t *testing.T) {
 
 func TestEnv_GetRegisterHandler_Uniqueness(t *testing.T) {
 	var inputMsg = "{\"id\":1, \"age\":1, \"sex\":\"M\"}"
-	var successEnv = &Env{userDAO: new(mocks.NotExistUserDAOMock)}
-	var failEnv = &Env{userDAO: new(mocks.ExistUserDAOMock)}
+	var successEnv = &Env{UserDAO: new(mocks.NotExistUserDAOMock), Logger: defaultLogger()}
+	var failEnv = &Env{UserDAO: new(mocks.ExistUserDAOMock), Logger: defaultLogger()}
 
 	var successRec, successRecErr = getRecorder(
 		urlSample,
@@ -165,7 +170,7 @@ func TestEnv_GetRegisterHandler_Uniqueness(t *testing.T) {
 
 func TestEnv_GetRegisterHandler_DBError(t *testing.T) {
 	var inputMsg = "{\"id\":1, \"age\":1, \"sex\":\"M\"}"
-	var env = &Env{userDAO:new(mocks.FailUserDAOMock)}
+	var env = &Env{UserDAO: new(mocks.FailUserDAOMock), Logger: defaultLogger()}
 
 	var rec, err = getRecorder(
 		urlSample,
@@ -183,10 +188,11 @@ func TestEnv_GetRegisterHandler_DBError(t *testing.T) {
 }
 
 func TestEnv_GetStatsAddHandler_EmptyBody(t *testing.T) {
+	var env = &Env{Logger: defaultLogger()}
 	var rr, err = getRecorder(
 		urlSample,
 		http.MethodPost,
-		new(Env).GetStatsAddHandler(),
+		env.GetStatsAddHandler(),
 		nil,
 		headerPair{"Content-Type", "application/json"},
 	)
@@ -204,10 +210,11 @@ func TestEnv_GetStatsAddHandler_EmptyBody(t *testing.T) {
 }
 
 func TestEnv_GetStatsAddHandler_JSONUnparsable(t *testing.T) {
+	var env = &Env{Logger: defaultLogger()}
 	var rr, err = getRecorder(
 		urlSample,
 		http.MethodPost,
-		new(Env).GetStatsAddHandler(),
+		env.GetStatsAddHandler(),
 		strings.NewReader("{it is badly formatted json}"),
 		headerPair{"Content-Type", "application/json"},
 	)
@@ -230,11 +237,12 @@ func TestEnv_GetStatsAddHandler_IncompleteData(t *testing.T) {
 		{"{\"user\":100, \"action\":\"like\"}", model.StatsRequiredTs},
 	}
 
+	var env = &Env{Logger: defaultLogger()}
 	for _, item := range testData {
 		var rec, err = getRecorder(
 			urlSample,
 			http.MethodPost,
-			new(Env).GetStatsAddHandler(),
+			env.GetStatsAddHandler(),
 			strings.NewReader(item.inputMsg),
 			headerPair{"Content-Type", "application/json"},
 		)
@@ -259,11 +267,12 @@ func TestEnv_GetStatsAddHandler_IncorrectData(t *testing.T) {
 		{"{\"user\":100, \"action\":\"like\", \"ts\":\"2017-06-30 14:12:34\"}"},
 	}
 
+	var env = &Env{Logger: defaultLogger()}
 	for _, item := range testData {
 		var rec, err = getRecorder(
 			urlSample,
 			http.MethodPost,
-			new(Env).GetStatsAddHandler(),
+			env.GetStatsAddHandler(),
 			strings.NewReader(item.inputMsg),
 			headerPair{"Content-Type", "application/json"},
 		)
@@ -279,7 +288,7 @@ func TestEnv_GetStatsAddHandler_IncorrectData(t *testing.T) {
 
 func TestEnv_GetStatsAddHandler_UserNotExist(t *testing.T) {
 	var inputMsg = "{\"user\":100, \"action\":\"like\", \"ts\":\"2017-06-30T14:12:34\"}"
-	var failEnv = &Env{userDAO: new(mocks.NotExistUserDAOMock)}
+	var failEnv = &Env{UserDAO: new(mocks.NotExistUserDAOMock), Logger: defaultLogger()}
 
 	var rec, err = getRecorder(
 		urlSample,
@@ -297,9 +306,33 @@ func TestEnv_GetStatsAddHandler_UserNotExist(t *testing.T) {
 	}
 }
 
-func TestEnv_GetStatsAddHandler_DBError(t *testing.T) {
+func TestEnv_GetStatsAddHandler_UserDAODBError(t *testing.T) {
 	var inputMsg = "{\"user\":100, \"action\":\"like\", \"ts\":\"2017-06-30T14:12:34\"}"
-	var failEnv = &Env{userDAO: new(mocks.FailUserDAOMock)}
+	var failEnv = &Env{UserDAO: new(mocks.FailUserDAOMock), Logger: defaultLogger()}
+
+	var rec, err = getRecorder(
+		urlSample,
+		http.MethodPost,
+		failEnv.GetStatsAddHandler(),
+		strings.NewReader(inputMsg),
+		headerPair{"Content-Type", "application/json"},
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if status := rec.Code; status != http.StatusInternalServerError {
+		t.Errorf("Expected status code %v, got %v", http.StatusInternalServerError, status)
+	}
+}
+
+func TestEnv_GetStatsAddHandler_StatsDAODBError(t *testing.T) {
+	var inputMsg = "{\"user\":100, \"action\":\"like\", \"ts\":\"2017-06-30T14:12:34\"}"
+	var failEnv = &Env{
+		UserDAO:  new(mocks.ExistUserDAOMock),
+		StatsDAO: new(mocks.FailStatsDAOMock),
+		Logger:   defaultLogger(),
+	}
 
 	var rec, err = getRecorder(
 		urlSample,
@@ -319,7 +352,11 @@ func TestEnv_GetStatsAddHandler_DBError(t *testing.T) {
 
 func TestEnv_GetStatsAddHandler_Success(t *testing.T) {
 	var inputMsg = "{\"user\":100, \"action\":\"like\", \"ts\":\"2017-06-30T14:12:34\"}"
-	var failEnv = &Env{userDAO: new(mocks.ExistUserDAOMock), statsDAO: new(mocks.SuccessStatsDAOMock)}
+	var failEnv = &Env{
+		UserDAO:  new(mocks.ExistUserDAOMock),
+		StatsDAO: new(mocks.SuccessStatsDAOMock),
+		Logger:   defaultLogger(),
+	}
 
 	var rec, err = getRecorder(
 		urlSample,
@@ -344,11 +381,12 @@ func TestEnv_GetStatsRequestHandler_IncompleteQueryString(t *testing.T) {
 		"/urlSample?date1=2017-06-20&date2=2017-06-30&action=comments",
 	}
 
+	var env = &Env{Logger: defaultLogger()}
 	for _, url := range urlSlice {
 		var rec, err = getRecorder(
 			url,
 			http.MethodGet,
-			new(Env).GetStatsRequestHandler(),
+			env.GetStatsRequestHandler(),
 			nil,
 		)
 
@@ -389,11 +427,12 @@ func TestEnv_GetStatsRequestHandler_BadQueryString(t *testing.T) {
 		},
 	}
 
+	var env = &Env{Logger: defaultLogger()}
 	for _, item := range testData {
 		var rec, err = getRecorder(
 			item.url,
 			http.MethodGet,
-			new(Env).GetStatsRequestHandler(),
+			env.GetStatsRequestHandler(),
 			nil,
 		)
 
@@ -409,7 +448,7 @@ func TestEnv_GetStatsRequestHandler_BadQueryString(t *testing.T) {
 
 func TestEnv_GetStatsRequestHandler_DBError(t *testing.T) {
 	var url = "/urlSample?date1=2017-06-20&date2=2017-06-30&action=comments&limit=10"
-	var env = &Env{statsDAO:new(mocks.FailStatsDAOMock)}
+	var env = &Env{StatsDAO: new(mocks.FailStatsDAOMock), Logger: defaultLogger()}
 
 	var rec, err = getRecorder(
 		url,
@@ -438,7 +477,7 @@ func TestEnv_GetStatsRequestHandler_Success(t *testing.T) {
 		},
 	}
 
-	var env = &Env{statsDAO: &mocks.SuccessStatsDAOMock{}}
+	var env = &Env{StatsDAO: &mocks.SuccessStatsDAOMock{}, Logger: defaultLogger()}
 
 	for _, item := range testData {
 		var rec, err = getRecorder(

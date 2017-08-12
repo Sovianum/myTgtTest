@@ -1,11 +1,9 @@
 package handlers
 
 import (
-	"database/sql"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/Sovianum/myTgtTest/dao"
 	"github.com/Sovianum/myTgtTest/model"
 	"net/http"
 	"net/url"
@@ -35,18 +33,6 @@ const (
 
 type HandlerType func(http.ResponseWriter, *http.Request)
 
-type Env struct {
-	userDAO  dao.UserDAO
-	statsDAO dao.StatsDAO
-}
-
-func NewDBEnv(db *sql.DB) Env {
-	return Env{
-		userDAO:  dao.NewDBUserDAO(db),
-		statsDAO: dao.NewDBStatsDAO(db),
-	}
-}
-
 func (env *Env) GetRegisterHandler() HandlerType {
 	var innerFunc = func(w http.ResponseWriter, r *http.Request) {
 		var registration = model.Registration{}
@@ -55,36 +41,47 @@ func (env *Env) GetRegisterHandler() HandlerType {
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			w.Write([]byte(err.Error()))
+			env.Logger.LogRequestError(r, err)
 			return
 		}
 
-		var exists, existsError = env.userDAO.Exists(registration.Id)
+		var exists, existsError = env.UserDAO.Exists(registration.Id)
 		if existsError != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(existsError.Error()))
+			env.Logger.LogRequestError(r, existsError)
 			return
 		}
 
 		if exists {
 			w.WriteHeader(http.StatusConflict)
 			w.Write([]byte(userAlreadyExists))
+			env.Logger.LogUserAlreadyExists(r, registration.Id)
 			return
 		}
 
-		var saveError = env.userDAO.Save(registration)
+		var saveError = env.UserDAO.Save(registration)
 		if saveError != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(saveError.Error()))
+			env.Logger.LogRequestError(r, saveError)
 			return
 		}
+
+		env.Logger.LogRequestSuccess(r)
 	}
 
-	return ValidateContentType(
-		"application/json",
-		ValidateNonEmptyBody(
-			emptyBodyMsg,
-			innerFunc,
+	return LogOnEnter(
+		ValidateContentType(
+			"application/json",
+			ValidateNonEmptyBody(
+				emptyBodyMsg,
+				innerFunc,
+				env,
+			),
+			env,
 		),
+		env,
 	)
 }
 
@@ -96,40 +93,52 @@ func (env *Env) GetStatsAddHandler() HandlerType {
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			w.Write([]byte(err.Error()))
+			env.Logger.LogRequestError(r, err)
 			return
 		}
 
-		var exists, existsErr = env.userDAO.Exists(stats.User)
+		var exists, existsErr = env.UserDAO.Exists(stats.User)
 		if existsErr != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(existsErr.Error()))
+			env.Logger.LogRequestError(r, existsErr)
+			return
 		}
 
 		if !exists {
 			w.WriteHeader(http.StatusNotFound)
 			w.Write([]byte(userNotFound))
+			env.Logger.LogUserNotExists(r, stats.User)
 			return
 		}
 
-		var saveError = env.statsDAO.Save(stats)
+		var saveError = env.StatsDAO.Save(stats)
 		if saveError != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(saveError.Error()))
+			env.Logger.LogRequestError(r, saveError)
 			return
 		}
+
+		env.Logger.LogRequestSuccess(r)
 	}
 
-	return ValidateContentType(
-		"application/json",
-		ValidateNonEmptyBody(
-			emptyBodyMsg,
-			innerFunc,
+	return LogOnEnter(
+		ValidateContentType(
+			"application/json",
+			ValidateNonEmptyBody(
+				emptyBodyMsg,
+				innerFunc,
+				env,
+			),
+			env,
 		),
+		env,
 	)
 }
 
 func (env *Env) GetStatsRequestHandler() HandlerType {
-	return func(w http.ResponseWriter, r *http.Request) {
+	var innerFunc = func(w http.ResponseWriter, r *http.Request) {
 		var query = r.URL.Query()
 		var checkErr = checkFieldsExistence(
 			query,
@@ -140,6 +149,7 @@ func (env *Env) GetStatsRequestHandler() HandlerType {
 		if checkErr != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			w.Write([]byte(checkErr.Error()))
+			env.Logger.LogRequestError(r, checkErr)
 			return
 		}
 
@@ -147,6 +157,7 @@ func (env *Env) GetStatsRequestHandler() HandlerType {
 		if dateParseErr != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			w.Write([]byte(dateParseErr.Error()))
+			env.Logger.LogRequestError(r, dateParseErr)
 			return
 		}
 
@@ -154,19 +165,27 @@ func (env *Env) GetStatsRequestHandler() HandlerType {
 		if parseErr != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			w.Write([]byte(parseErr.Error()))
+			env.Logger.LogRequestError(r, parseErr)
 			return
 		}
 
-		var statsSlice, err = env.statsDAO.GetStatsSlice(dateSlice, action, limit)
+		var statsSlice, err = env.StatsDAO.GetStatsSlice(dateSlice, action, limit)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(err.Error()))
+			env.Logger.LogRequestError(r, err)
 			return
 		}
 
 		var msg, _ = json.Marshal(statsSlice)
 		w.Write(msg)
+		env.Logger.LogRequestSuccess(r)
 	}
+
+	return LogOnEnter(
+		innerFunc,
+		env,
+	)
 }
 
 // Function returns error if some of names in nameSlice not present in query.

@@ -1,9 +1,9 @@
 package mocks
 
 import (
+	"errors"
 	"github.com/Sovianum/myTgtTest/model"
 	"time"
-	"errors"
 )
 
 type SuccessStatsDAOMock struct{}
@@ -23,7 +23,7 @@ func (*SuccessStatsDAOMock) GetStatsSlice([]time.Time, string, int) (model.Stats
 	return slice, nil
 }
 
-type FailStatsDAOMock struct {}
+type FailStatsDAOMock struct{}
 
 func (*FailStatsDAOMock) Save(stats model.Stats) error {
 	return errors.New("Failed to save")

@@ -25,7 +25,7 @@ func (*NotExistUserDAOMock) Exists(uint) (bool, error) {
 	return false, nil
 }
 
-type FailUserDAOMock struct {}
+type FailUserDAOMock struct{}
 
 func (*FailUserDAOMock) Save(model.Registration) error {
 	return errors.New("Failed to save")

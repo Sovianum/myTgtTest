@@ -3,5 +3,6 @@
   "DriverName": "postgres",
   "DBUser": "go_user",
   "DBPassword": "go",
-  "DBName": "my_target_db"
+  "DBName": "my_target_db",
+  "LogFile": "log.log"
 }
