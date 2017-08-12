@@ -21,3 +21,4 @@ bin
 /notes.txt
 /resources/test.sql
 *.log
+/fill_base.go
