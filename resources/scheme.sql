@@ -18,7 +18,9 @@ CREATE TABLE Stats (
   id SERIAL PRIMARY KEY ,
   userId INTEGER REFERENCES Client(id),
   ts TIMESTAMP,
-  action EAction
+  action EAction,
+  counter INT DEFAULT 1,
+  UNIQUE (userId, ts, action)
 );
 
 CREATE INDEX stats_userid_idx ON Stats (userId);

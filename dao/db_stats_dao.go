@@ -10,14 +10,17 @@ import (
 )
 
 const (
-	saveStats           = `INSERT INTO Stats (userId, ts, action) SELECT $1, date_trunc('day', CAST($2 AS TIMESTAMP)), $3`
+	saveStats           = `
+	INSERT INTO Stats (userId, ts, action)
+  	  SELECT $1, date_trunc('day', CAST($2 AS TIMESTAMP)), $3
+	ON CONFLICT (userid, action, ts) DO UPDATE SET counter = Stats.counter + 1;
+	`
 	newGetStatsTemplate = `
-	SELECT c.id id, c.age age, c.sex sex, count(*) cnt, s.ts ts FROM
+	SELECT c.id id, c.age age, c.sex sex, s.counter cnt, s.ts ts FROM
 	  Client c
 	  JOIN Stats s ON c.id = s.userId
 	WHERE s.ts IN ( %s ) AND s.action = $%d
-	GROUP BY s.ts, c.id
-	ORDER BY s.ts, cnt DESC
+	ORDER BY s.ts, cnt DESC, id
 	LIMIT $%d;
 	`
 )
