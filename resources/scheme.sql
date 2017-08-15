@@ -24,4 +24,4 @@ CREATE TABLE Stats (
 );
 
 CREATE INDEX stats_userid_idx ON Stats (userId);
-CREATE INDEX stats_ts_userid_idx ON Stats (userId, ts);
+CREATE INDEX stats_ts_userid_idx ON Stats (ts, userId);
